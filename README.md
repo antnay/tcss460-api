@@ -1,17 +1,15 @@
-# tcss460-api
-
 # Alpha Sprint
+- 10/11 8:30PM - 9:30PM
 
-## Contribution
-
-- Anthony Naydyuk
-- Regan Lai
-- Boyd Bouck
-- Hussein Sheikh
-
+## Contribution and Members
+- Anthony Naydyuk: SQL script, YAML, Cloud Hosting Options
+- Regan Lai: Creating ER diagram
+- Boyd Bouck:
+- Hussein Sheikh:
 
 ## Meeting
-- Discord
+- Discord 
 
 ## Comments
+
 
