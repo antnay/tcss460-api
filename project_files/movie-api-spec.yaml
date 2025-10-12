@@ -1,0 +1,1767 @@
+openapi: 3.0.3
+info:
+  title: Movie Database API
+  version: 1.0.0
+  description: |
+    # Movie Database Web API
+    
+    A comprehensive RESTful API for managing and querying a movie database with detailed information about films, 
+    cast, crew, studios, and financial data.
+    
+    ## Features
+    - **Retrieve**: Get complete movie information, search by multiple criteria
+    - **Add**: Insert new movies with full metadata
+    - **Update**: Modify existing records (complete or partial updates)
+    - **Delete**: Remove movies from the database
+    - **Advanced Search**: Multi-criteria filtering and complex queries
+    
+    ## Authentication
+    All endpoints require API key authentication via the `X-API-Key` header.
+    
+    ## Rate Limiting
+    - 1000 requests per hour for read operations
+    - 100 requests per hour for write operations
+    
+    ## Response Format
+    All responses are in JSON format with consistent structure.
+    
+  contact:
+    name: API Support
+    email: api-support@moviedatabase.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.moviedatabase.com/v1
+    description: Production server
+  - url: https://staging-api.moviedatabase.com/v1
+    description: Staging server
+  - url: http://localhost:8080/v1
+    description: Development server
+
+tags:
+  - name: Movies
+    description: Operations related to movie records
+  - name: Search
+    description: Search and filter operations
+  - name: Collections
+    description: Movie collection/franchise operations
+  - name: People
+    description: Operations related to actors and directors
+  - name: Studios
+    description: Production studio operations
+  - name: Analytics
+    description: Statistical and analytical queries
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /movies:
+    get:
+      tags:
+        - Movies
+      summary: Get all movies
+      description: |
+        Retrieve a paginated list of all movies in the database with complete information.
+        Results can be sorted and filtered using query parameters.
+      operationId: getAllMovies
+      parameters:
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of results per page
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: sort
+          in: query
+          description: Sort field and direction
+          schema:
+            type: string
+            enum: [title_asc, title_desc, release_date_asc, release_date_desc, budget_asc, budget_desc, revenue_asc, revenue_desc]
+            default: release_date_desc
+        - name: include
+          in: query
+          description: Related data to include (comma-separated)
+          schema:
+            type: string
+            example: "actors,directors,studios"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      movies:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Movie'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    post:
+      tags:
+        - Movies
+      summary: Add a new movie
+      description: Create a new movie record with complete information
+      operationId: createMovie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovieInput'
+      responses:
+        '201':
+          description: Movie successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      movie:
+                        $ref: '#/components/schemas/Movie'
+                      message:
+                        type: string
+                        example: Movie successfully created
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Conflict - Movie already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /movies/{movieId}:
+    get:
+      tags:
+        - Movies
+      summary: Get movie by ID
+      description: Retrieve complete details for a specific movie
+      operationId: getMovieById
+      parameters:
+        - name: movieId
+          in: path
+          required: true
+          description: Unique movie identifier
+          schema:
+            type: integer
+            example: 1
+        - name: include
+          in: query
+          description: Related data to include (comma-separated)
+          schema:
+            type: string
+            example: "actors,directors,studios,producers"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      movie:
+                        $ref: '#/components/schemas/Movie'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    put:
+      tags:
+        - Movies
+      summary: Update complete movie record
+      description: Replace an entire movie record with updated information
+      operationId: updateMovie
+      parameters:
+        - name: movieId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovieInput'
+      responses:
+        '200':
+          description: Movie successfully updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      movie:
+                        $ref: '#/components/schemas/Movie'
+                      message:
+                        type: string
+                        example: Movie successfully updated
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    patch:
+      tags:
+        - Movies
+      summary: Partially update movie
+      description: Update specific fields of a movie without affecting other data
+      operationId: partialUpdateMovie
+      parameters:
+        - name: movieId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoviePatchInput'
+            examples:
+              updateFinancials:
+                summary: Update financial data
+                value:
+                  revenue: 844060875
+                  budget: 180000000
+              updateReleaseDate:
+                summary: Update release date
+                value:
+                  releaseDate: "2025-07-15"
+              addActor:
+                summary: Add cast member
+                value:
+                  actors:
+                    - name: "Tom Hanks"
+                      character: "Captain Miller"
+                      order: 3
+      responses:
+        '200':
+          description: Movie successfully updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      movie:
+                        $ref: '#/components/schemas/Movie'
+                      updatedFields:
+                        type: array
+                        items:
+                          type: string
+                        example: ["revenue", "budget"]
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    delete:
+      tags:
+        - Movies
+      summary: Delete movie
+      description: Permanently remove a movie from the database
+      operationId: deleteMovie
+      parameters:
+        - name: movieId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: confirm
+          in: query
+          required: true
+          description: Confirmation flag (must be true)
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Movie successfully deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Movie successfully deleted
+                      deletedMovieId:
+                        type: integer
+                        example: 123
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /movies/bulk:
+    post:
+      tags:
+        - Movies
+      summary: Bulk import movies
+      description: Add multiple movies in a single operation
+      operationId: bulkCreateMovies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                movies:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/MovieInput'
+                  minItems: 1
+                  maxItems: 100
+      responses:
+        '201':
+          description: Bulk import completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      successful:
+                        type: integer
+                        example: 95
+                      failed:
+                        type: integer
+                        example: 5
+                      results:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            index:
+                              type: integer
+                            title:
+                              type: string
+                            status:
+                              type: string
+                              enum: [success, failed]
+                            movieId:
+                              type: integer
+                            error:
+                              type: string
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /movies/search:
+    get:
+      tags:
+        - Search
+      summary: Search movies by title
+      description: Find movies based on title or partial title matches
+      operationId: searchMoviesByTitle
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search query (title or partial title)
+          schema:
+            type: string
+            minLength: 1
+          example: "Mission"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: exact
+          in: query
+          description: Exact match only
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      movies:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Movie'
+                      query:
+                        type: string
+                        example: "Mission"
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /movies/filter:
+    get:
+      tags:
+        - Search
+      summary: Advanced multi-filter search
+      description: |
+        Search movies using multiple criteria simultaneously. All filters are combined with AND logic.
+      operationId: filterMovies
+      parameters:
+        - name: genre
+          in: query
+          description: Filter by genre(s) - comma-separated for multiple
+          schema:
+            type: string
+          example: "Action,Adventure"
+        - name: releaseFrom
+          in: query
+          description: Start of release date range (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+          example: "2025-05-01"
+        - name: releaseTo
+          in: query
+          description: End of release date range (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+          example: "2025-08-31"
+        - name: rating
+          in: query
+          description: MPA rating
+          schema:
+            type: string
+            enum: [PG, PG-13, R]
+        - name: minBudget
+          in: query
+          description: Minimum budget
+          schema:
+            type: integer
+          example: 100000000
+        - name: maxBudget
+          in: query
+          description: Maximum budget
+          schema:
+            type: integer
+        - name: minRevenue
+          in: query
+          description: Minimum revenue
+          schema:
+            type: integer
+          example: 500000000
+        - name: maxRevenue
+          in: query
+          description: Maximum revenue
+          schema:
+            type: integer
+        - name: studio
+          in: query
+          description: Filter by studio name
+          schema:
+            type: string
+          example: "Marvel Studios"
+        - name: director
+          in: query
+          description: Filter by director name
+          schema:
+            type: string
+        - name: actor
+          in: query
+          description: Filter by actor name
+          schema:
+            type: string
+        - name: collection
+          in: query
+          description: Filter by collection name
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          schema:
+            type: string
+            default: release_date_desc
+      responses:
+        '200':
+          description: Filtered results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      movies:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Movie'
+                      appliedFilters:
+                        type: object
+                        additionalProperties: true
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /movies/by-release-date:
+    get:
+      tags:
+        - Search
+      summary: Filter movies by release date range
+      description: Find all movies released within a specific time period
+      operationId: getMoviesByDateRange
+      parameters:
+        - name: from
+          in: query
+          required: true
+          description: Start date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+          example: "2025-06-01"
+        - name: to
+          in: query
+          required: true
+          description: End date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+          example: "2025-06-30"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Movies in date range
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      movies:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Movie'
+                      dateRange:
+                        type: object
+                        properties:
+                          from:
+                            type: string
+                            format: date
+                          to:
+                            type: string
+                            format: date
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /movies/by-genre/{genre}:
+    get:
+      tags:
+        - Search
+      summary: Filter movies by genre
+      description: Find all movies in a specific genre
+      operationId: getMoviesByGenre
+      parameters:
+        - name: genre
+          in: path
+          required: true
+          description: Genre name
+          schema:
+            type: string
+            enum: [Action, Adventure, Animation, Comedy, Crime, Drama, Family, Fantasy, Horror, Music, Mystery, Romance, Science Fiction, Thriller]
+          example: "Action"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Movies in genre
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      movies:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Movie'
+                      genre:
+                        type: string
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /movies/by-rating/{rating}:
+    get:
+      tags:
+        - Search
+      summary: Filter movies by MPA rating
+      description: Find all movies with a specific content rating
+      operationId: getMoviesByRating
+      parameters:
+        - name: rating
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [PG, PG-13, R]
+          example: "PG-13"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Movies with specified rating
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      movies:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Movie'
+                      rating:
+                        type: string
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /collections:
+    get:
+      tags:
+        - Collections
+      summary: Get all collections
+      description: Retrieve list of all movie collections/franchises
+      operationId: getAllCollections
+      responses:
+        '200':
+          description: List of collections
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      collections:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Collection'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /collections/{collectionName}/movies:
+    get:
+      tags:
+        - Collections
+      summary: Get movies in collection
+      description: Retrieve all movies that belong to a specific franchise
+      operationId: getMoviesByCollection
+      parameters:
+        - name: collectionName
+          in: path
+          required: true
+          description: Collection/franchise name
+          schema:
+            type: string
+          example: "Mission: Impossible Collection"
+      responses:
+        '200':
+          description: Movies in collection
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      collection:
+                        $ref: '#/components/schemas/Collection'
+                      movies:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Movie'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /actors/{actorName}/movies:
+    get:
+      tags:
+        - People
+      summary: Search movies by actor
+      description: Find all movies featuring a specific actor
+      operationId: getMoviesByActor
+      parameters:
+        - name: actorName
+          in: path
+          required: true
+          description: Actor name
+          schema:
+            type: string
+          example: "Tom Cruise"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Movies featuring the actor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      actor:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          profileUrl:
+                            type: string
+                      movies:
+                        type: array
+                        items:
+                          allOf:
+                            - $ref: '#/components/schemas/Movie'
+                            - type: object
+                              properties:
+                                characterPlayed:
+                                  type: string
+                                  example: "Ethan Hunt"
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /directors/{directorName}/movies:
+    get:
+      tags:
+        - People
+      summary: Search movies by director
+      description: Find all movies directed by a specific filmmaker
+      operationId: getMoviesByDirector
+      parameters:
+        - name: directorName
+          in: path
+          required: true
+          description: Director name
+          schema:
+            type: string
+          example: "James Gunn"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Movies directed by the filmmaker
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      director:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                      movies:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Movie'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /studios/{studioName}/movies:
+    get:
+      tags:
+        - Studios
+      summary: Search movies by studio
+      description: Find all movies produced by a specific studio
+      operationId: getMoviesByStudio
+      parameters:
+        - name: studioName
+          in: path
+          required: true
+          description: Studio name
+          schema:
+            type: string
+          example: "Marvel Studios"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Movies produced by the studio
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      studio:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          logoUrl:
+                            type: string
+                          country:
+                            type: string
+                      movies:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Movie'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /analytics/financial:
+    get:
+      tags:
+        - Analytics
+      summary: Financial performance analytics
+      description: Get movies filtered by financial criteria with statistical analysis
+      operationId: getFinancialAnalytics
+      parameters:
+        - name: minBudget
+          in: query
+          schema:
+            type: integer
+        - name: maxBudget
+          in: query
+          schema:
+            type: integer
+        - name: minRevenue
+          in: query
+          schema:
+            type: integer
+        - name: maxRevenue
+          in: query
+          schema:
+            type: integer
+        - name: minProfit
+          in: query
+          description: Minimum profit (revenue - budget)
+          schema:
+            type: integer
+        - name: includeStats
+          in: query
+          description: Include statistical summary
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Financial analytics results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      movies:
+                        type: array
+                        items:
+                          allOf:
+                            - $ref: '#/components/schemas/Movie'
+                            - type: object
+                              properties:
+                                profit:
+                                  type: integer
+                                  description: Revenue minus budget
+                                roi:
+                                  type: number
+                                  format: float
+                                  description: Return on investment percentage
+                      statistics:
+                        type: object
+                        properties:
+                          totalMovies:
+                            type: integer
+                          averageBudget:
+                            type: integer
+                          averageRevenue:
+                            type: integer
+                          totalRevenue:
+                            type: integer
+                          totalProfit:
+                            type: integer
+                          mostProfitable:
+                            $ref: '#/components/schemas/Movie'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /genres:
+    get:
+      tags:
+        - Search
+      summary: Get all genres
+      description: Retrieve list of all available genres with movie counts
+      operationId: getAllGenres
+      responses:
+        '200':
+          description: List of genres
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      genres:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            movieCount:
+                              type: integer
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      description: Check API health and database connectivity
+      operationId: healthCheck
+      security: []
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  timestamp:
+                    type: string
+                    format: date-time
+                  database:
+                    type: string
+                    example: connected
+                  version:
+                    type: string
+                    example: "1.0.0"
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+
+  schemas:
+    Movie:
+      type: object
+      properties:
+        movieId:
+          type: integer
+          description: Unique movie identifier
+          example: 1
+        title:
+          type: string
+          description: Display title
+          example: "Mission: Impossible - The Final Reckoning"
+        originalTitle:
+          type: string
+          description: Original title (if different)
+          example: "Mission: Impossible - The Final Reckoning"
+        releaseDate:
+          type: string
+          format: date
+          description: Theatrical release date
+          example: "2025-05-17"
+        runtime:
+          type: integer
+          description: Runtime in minutes
+          example: 170
+        overview:
+          type: string
+          description: Movie synopsis/description
+          example: "Ethan Hunt and team continue their search for the terrifying AI known as the Entity..."
+        budget:
+          type: integer
+          format: int64
+          description: Production budget in USD
+          example: 400000000
+        revenue:
+          type: integer
+          format: int64
+          description: Total box office revenue in USD
+          example: 597913515
+        mpaRating:
+          type: string
+          description: MPA content rating
+          enum: [PG, PG-13, R]
+          example: "PG-13"
+        posterUrl:
+          type: string
+          format: uri
+          description: URL to movie poster image
+          example: "/z53D72EAOxGRqdr7KXXWp9dJiDe.jpg"
+        backdropUrl:
+          type: string
+          format: uri
+          description: URL to backdrop/banner image
+          example: "/538U9snNc2fpnOmYXAPUh3zn31H.jpg"
+        collection:
+          type: object
+          nullable: true
+          properties:
+            collectionId:
+              type: integer
+            name:
+              type: string
+              example: "Mission: Impossible Collection"
+        genres:
+          type: array
+          description: Movie genres
+          items:
+            type: object
+            properties:
+              genreId:
+                type: integer
+              name:
+                type: string
+                example: "Action"
+          example:
+            - genreId: 1
+              name: "Action"
+            - genreId: 2
+              name: "Adventure"
+        studios:
+          type: array
+          description: Production studios
+          items:
+            type: object
+            properties:
+              studioId:
+                type: integer
+              name:
+                type: string
+              logoUrl:
+                type: string
+              country:
+                type: string
+          example:
+            - studioId: 1
+              name: "Paramount Pictures"
+              logoUrl: "/gz66EfNoYPqHTYI4q9UEN4CbHRc.png"
+              country: "US"
+        directors:
+          type: array
+          description: Movie directors
+          items:
+            type: object
+            properties:
+              directorId:
+                type: integer
+              name:
+                type: string
+          example:
+            - directorId: 1
+              name: "Christopher McQuarrie"
+        producers:
+          type: array
+          description: Movie producers
+          items:
+            type: object
+            properties:
+              producerId:
+                type: integer
+              name:
+                type: string
+          example:
+            - producerId: 1
+              name: "Tom Cruise"
+            - producerId: 2
+              name: "Christopher McQuarrie"
+        actors:
+          type: array
+          description: Cast members (up to 10)
+          maxItems: 10
+          items:
+            type: object
+            properties:
+              actorId:
+                type: integer
+              name:
+                type: string
+              character:
+                type: string
+              profileUrl:
+                type: string
+              order:
+                type: integer
+                minimum: 1
+                maximum: 10
+          example:
+            - actorId: 1
+              name: "Tom Cruise"
+              character: "Ethan Hunt"
+              profileUrl: "/3mShHjSQR7NXOVbdTu5rT2Qd0MN.jpg"
+              order: 1
+            - actorId: 2
+              name: "Hayley Atwell"
+              character: "Grace"
+              profileUrl: "/x57wXHexIjD2ywly9cRA4rov7cu.jpg"
+              order: 2
+        createdAt:
+          type: string
+          format: date-time
+          description: Record creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+
+    MovieInput:
+      type: object
+      required:
+        - title
+        - releaseDate
+        - runtime
+        - genres
+        - mpaRating
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: "The Fantastic 4: First Steps"
+        originalTitle:
+          type: string
+          maxLength: 500
+        releaseDate:
+          type: string
+          format: date
+          example: "2025-07-23"
+        runtime:
+          type: integer
+          minimum: 1
+          maximum: 500
+          example: 115
+        overview:
+          type: string
+          maxLength: 2000
+        budget:
+          type: integer
+          format: int64
+          minimum: 0
+        revenue:
+          type: integer
+          format: int64
+          minimum: 0
+        mpaRating:
+          type: string
+          enum: [PG, PG-13, R]
+        posterUrl:
+          type: string
+          format: uri
+          maxLength: 500
+        backdropUrl:
+          type: string
+          format: uri
+          maxLength: 500
+        collectionName:
+          type: string
+          maxLength: 255
+        genres:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            enum: [Action, Adventure, Animation, Comedy, Crime, Drama, Family, Fantasy, Horror, Music, Mystery, Romance, Science Fiction, Thriller]
+        studios:
+          type: array
+          items:
+            type: object
+            required:
+              - name
+            properties:
+              name:
+                type: string
+              logoUrl:
+                type: string
+                format: uri
+              country:
+                type: string
+                pattern: '^[A-Z]{2}$'
+        directors:
+          type: array
+          items:
+            type: string
+        producers:
+          type: array
+          items:
+            type: string
+        actors:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            required:
+              - name
+              - order
+            properties:
+              name:
+                type: string
+              character:
+                type: string
+              profileUrl:
+                type: string
+                format: uri
+              order:
+                type: integer
+                minimum: 1
+                maximum: 10
+
+    MoviePatchInput:
+      type: object
+      description: Partial update - only include fields to be updated
+      properties:
+        title:
+          type: string
+        originalTitle:
+          type: string
+        releaseDate:
+          type: string
+          format: date
+        runtime:
+          type: integer
+        overview:
+          type: string
+        budget:
+          type: integer
+          format: int64
+        revenue:
+          type: integer
+          format: int64
+        mpaRating:
+          type: string
+          enum: [PG, PG-13, R]
+        posterUrl:
+          type: string
+        backdropUrl:
+          type: string
+        collectionName:
+          type: string
+        genres:
+          type: array
+          items:
+            type: string
+        actors:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              character:
+                type: string
+              profileUrl:
+                type: string
+              order:
+                type: integer
+
+    Collection:
+      type: object
+      properties:
+        collectionId:
+          type: integer
+        name:
+          type: string
+          example: "Mission: Impossible Collection"
+        movieCount:
+          type: integer
+          example: 8
+        totalRevenue:
+          type: integer
+          format: int64
+
+    Pagination:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 10
+        totalResults:
+          type: integer
+          example: 200
+        resultsPerPage:
+          type: integer
+          example: 20
+        hasNextPage:
+          type: boolean
+          example: true
+        hasPreviousPage:
+          type: boolean
+          example: false
+
+    ResponseMetadata:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-10-12T04:30:00Z"
+        processingTime:
+          type: number
+          format: float
+          description: Response processing time in milliseconds
+          example: 45.3
+        version:
+          type: string
+          example: "1.0.0"
+
+    Error:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              example: "Invalid input data"
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    example: "releaseDate"
+                  message:
+                    type: string
+                    example: "Date must be in YYYY-MM-DD format"
+                  value:
+                    type: string
+            timestamp:
+              type: string
+              format: date-time
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: error
+            error:
+              code: BAD_REQUEST
+              message: Invalid query parameters
+              timestamp: "2025-10-12T04:30:00Z"
+
+    Unauthorized:
+      description: Unauthorized - missing or invalid API key
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: error
+            error:
+              code: UNAUTHORIZED
+              message: Invalid or missing API key
+              timestamp: "2025-10-12T04:30:00Z"
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: error
+            error:
+              code: FORBIDDEN
+              message: Insufficient permissions for this operation
+              timestamp: "2025-10-12T04:30:00Z"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: error
+            error:
+              code: NOT_FOUND
+              message: Requested resource not found
+              timestamp: "2025-10-12T04:30:00Z"
+
+    ValidationError:
+      description: Validation error - invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: error
+            error:
+              code: VALIDATION_ERROR
+              message: Input validation failed
+              details:
+                - field: releaseDate
+                  message: Date must be in YYYY-MM-DD format
+                  value: "2025/07/23"
+                - field: runtime
+                  message: Runtime must be a positive integer
+                  value: -120
+              timestamp: "2025-10-12T04:30:00Z"
+
+    RateLimitExceeded:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: error
+            error:
+              code: RATE_LIMIT_EXCEEDED
+              message: Rate limit exceeded. Please try again later.
+              details:
+                limit: 1000
+                remaining: 0
+                resetAt: "2025-10-12T05:00:00Z"
+              timestamp: "2025-10-12T04:30:00Z"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: error
+            error:
+              code: INTERNAL_SERVER_ERROR
+              message: An unexpected error occurred
+              timestamp: "2025-10-12T04:30:00Z"
