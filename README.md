@@ -3,7 +3,7 @@
 
 ## Contribution and Members
 - Anthony Naydyuk: SQL script, YAML, Cloud Hosting Options
-- Regan Lai: Creating ER diagram
+- Regan Lai: Creating ER diagram, documentation
 - Boyd Bouck:
 - Hussein Sheikh:
 
