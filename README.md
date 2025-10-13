@@ -5,7 +5,7 @@
 - Anthony Naydyuk: SQL script, Swagger, Cloud Hosting Options, Github, Supabase setup
 - Regan Lai: Creating ER diagram, documentation
 - Boyd Bouck:
-- Hussein Sheikh:
+- Hussein Sheikh: Took part in meeting help collaborate on Diagram and Documentation
 
 ## Meeting
 - Discord 
