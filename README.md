@@ -4,7 +4,7 @@
 ## Contribution and Members
 - Anthony Naydyuk: SQL script, Swagger, Cloud Hosting Options, Github, Supabase setup
 - Regan Lai: Creating ER diagram, documentation
-- Boyd Bouck:
+- Boyd Bouck: Researched cloud hosting services (Render, Vercel); demo deployments
 - Hussein Sheikh: Took part in meeting help collaborate on Diagram and Documentation
 
 ## Meeting
