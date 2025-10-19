@@ -17,8 +17,9 @@
 # Beta Sprint 
 - 10/18 8:00PM - 9:00PM
 
-## Supabase URL
-- https://yazbwlbbshphswhvfvgt.supabase.co
+## API URL
+- [movies query with year](https://tcss460-api.onrender.com/api/movies?year=2025)
+- [api docs](https://tcss460-api.onrender.com/api-docs)
 
 ## Contribution and Members
 - Anthony Naydyuk: Setup server, testing, docs
