@@ -1,3 +1,3 @@
-# TCSS360 web api server
+# TCSS460 web api server
 
-Documentation at `https://tcss460-api.onrender.com/api/api-docs`
+Documentation at [api docs](https://tcss460-api.onrender.com/api/api-docs)
