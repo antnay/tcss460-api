@@ -14,3 +14,23 @@
 - Anthony Naydyuk: None
 - Regan Lai: None
 
+# Beta Sprint 
+- 10/18 8:00PM - 9:00PM
+
+## Supabase URL
+- https://yazbwlbbshphswhvfvgt.supabase.co
+
+## Contribution and Members
+- Anthony Naydyuk: 
+- Regan Lai: n
+- Boyd Bouck: 
+- Hussein Sheikh:
+
+## Meeting Location and What Was Done 
+- Discord
+- Group contributing together completing the required task of the sprint
+
+## Comments
+- Anthony Naydyuk: 
+- Regan Lai: 
+
