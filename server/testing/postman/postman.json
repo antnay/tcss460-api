@@ -874,6 +874,7 @@
 			"listen": "prerequest",
 			"script": {
 				"type": "text/javascript",
+				"requests": {},
 				"exec": [
 					"// Global pre-request script",
 					"console.log('Starting request to:', pm.request.url.toString());"
@@ -884,6 +885,7 @@
 			"listen": "test",
 			"script": {
 				"type": "text/javascript",
+				"requests": {},
 				"exec": [
 					"// Global test script - runs after every request",
 					"",
@@ -898,13 +900,15 @@
 	"variable": [
 		{
 			"key": "baseUrl",
-			"value": "http://localhost:3000",
-			"type": "string"
+			"value": "http://localhost:3000"
 		},
 		{
 			"key": "sampleMovieTitle",
-			"value": "",
-			"type": "string"
+			"value": ""
+		},
+		{
+			"key": "hostUrl",
+			"value": ""
 		}
 	]
 }

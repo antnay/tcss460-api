@@ -11,7 +11,7 @@ info:
 servers:
   - url: http://localhost:3000
     description: Development server
-  - url: https://api.example.com
+  - url: https://tcss460-api.onrender.com
     description: Production server
 
 tags:
