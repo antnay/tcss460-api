@@ -22,7 +22,7 @@
 
 ## Contribution and Members
 - Anthony Naydyuk: 
-- Regan Lai: n
+- Regan Lai: Setting up Database in Supabase 
 - Boyd Bouck: 
 - Hussein Sheikh:
 
