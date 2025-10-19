@@ -132,7 +132,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /api-info:
+  /api/api-info:
     get:
       tags:
         - Info
@@ -152,7 +152,7 @@ paths:
                 description: RESTful API for movies
                 documentation: /api-docs
 
-  /api/api-docs:
+  /api-docs:
     get:
       tags:
         - Info

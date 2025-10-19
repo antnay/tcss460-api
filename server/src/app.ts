@@ -26,7 +26,7 @@ const startServer = async () => {
 
     // API Documentation - Swagger UI
     const swaggerDocument = YAML.load(path.join(__dirname, '../api-docs/swagger.yaml'));
-    app.use('/api/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
     app.use((req, res, next) => {
       console.log(`${req.method} ${req.url} - ${JSON.stringify(req.headers)}`);
