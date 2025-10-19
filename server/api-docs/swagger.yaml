@@ -1,0 +1,282 @@
+openapi: 3.0.0
+info:
+  title: TCSS 460 Movie API
+  version: 1.0.0
+  description: RESTful API for movies with comprehensive movie information including directors and genres
+  contact:
+    name: API Support
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: https://api.example.com
+    description: Production server
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: Movies
+    description: Movie-related operations
+  - name: Info
+    description: API information
+
+paths:
+  /api/health:
+    get:
+      tags:
+        - Health
+      summary: Database health check
+      description: Checks if the database connection is working
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Database is working
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Database is working!
+        '500':
+          description: Database connection failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/movies:
+    get:
+      tags:
+        - Movies
+      summary: Get all movies
+      description: Fetch all movies with director and genre information, optionally filtering by release year
+      operationId: getAllMovies
+      parameters:
+        - name: year
+          in: query
+          description: Filter movies by release year
+          required: false
+          schema:
+            type: integer
+            minimum: 1800
+            maximum: 2100
+            example: 2020
+      responses:
+        '200':
+          description: Successful response with list of movies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Movie'
+              examples:
+                allMovies:
+                  summary: List of movies with details
+                  value:
+                    - title: The Shawshank Redemption
+                      original_title: The Shawshank Redemption
+                      director_name: Frank Darabont
+                      genre_name: Drama
+                      release_date: 1994-09-23
+                      runtime_minutes: 142
+                      overview: Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.
+                      budget: 25000000
+                      revenue: 28341469
+                      mpa_rating: R
+                      poster_url: https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg
+                      backdrop_url: https://image.tmdb.org/t/p/w500/kXfqcdQKsToO0OUXHcrrNCHDBzO.jpg
+                    - title: The Godfather
+                      original_title: The Godfather
+                      director_name: Francis Ford Coppola
+                      genre_name: Crime
+                      release_date: 1972-03-14
+                      runtime_minutes: 175
+                      overview: The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.
+                      budget: 6000000
+                      revenue: 246120974
+                      mpa_rating: R
+                      poster_url: https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg
+                      backdrop_url: https://image.tmdb.org/t/p/w500/tmU7GeKVybMWFButWEGl2M4GeiP.jpg
+                filteredByYear:
+                  summary: Movies filtered by year 2020
+                  value:
+                    - title: Tenet
+                      original_title: Tenet
+                      director_name: Christopher Nolan
+                      genre_name: Action
+                      release_date: 2020-08-22
+                      runtime_minutes: 150
+                      overview: Armed with only one word, Tenet, and fighting for the survival of the entire world, a Protagonist journeys through a twilight world of international espionage on a mission that will unfold in something beyond real time.
+                      budget: 205000000
+                      revenue: 363656546
+                      mpa_rating: PG-13
+                      poster_url: https://image.tmdb.org/t/p/w500/k68nPLbIST6NP96JmTxmZijEvCA.jpg
+                      backdrop_url: https://image.tmdb.org/t/p/w500/8rIoyM6zYXJNjzGseT3MRusMPWl.jpg
+        '400':
+          description: Invalid year parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid year parameter
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api-info:
+    get:
+      tags:
+        - Info
+      summary: Get API information
+      description: Returns basic information about the API including documentation link
+      operationId: getApiInfo
+      responses:
+        '200':
+          description: API information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiInfo'
+              example:
+                name: TCSS 460 API
+                version: 1.0.0
+                description: RESTful API for movies
+                documentation: /api-docs
+
+  /api/api-docs:
+    get:
+      tags:
+        - Info
+      summary: API Documentation (Swagger UI)
+      description: Interactive API documentation using Swagger UI. Visit this endpoint in your browser to explore the API.
+      operationId: getApiDocs
+      responses:
+        '200':
+          description: Swagger UI HTML page
+          content:
+            text/html:
+              schema:
+                type: string
+
+components:
+  schemas:
+    Movie:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The title of the movie
+          example: The Shawshank Redemption
+        original_title:
+          type: string
+          description: The original title of the movie (may differ for international releases)
+          example: The Shawshank Redemption
+        director_name:
+          type: string
+          description: Name of the movie director
+          example: Frank Darabont
+        genre_name:
+          type: string
+          description: Primary genre of the movie
+          example: Drama
+        release_date:
+          type: string
+          format: date
+          description: Release date of the movie
+          example: 1994-09-23
+        runtime_minutes:
+          type: integer
+          description: Runtime of the movie in minutes
+          example: 142
+          minimum: 1
+        overview:
+          type: string
+          description: Brief synopsis or description of the movie
+          example: Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.
+        budget:
+          type: integer
+          description: Production budget in USD
+          example: 25000000
+          minimum: 0
+        revenue:
+          type: integer
+          description: Box office revenue in USD
+          example: 28341469
+          minimum: 0
+        mpa_rating:
+          type: string
+          description: MPA film rating (G, PG, PG-13, R, NC-17)
+          example: R
+          nullable: true
+          enum:
+            - G
+            - PG
+            - PG-13
+            - R
+            - NC-17
+        poster_url:
+          type: string
+          format: uri
+          description: URL to the movie poster image
+          example: https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg
+          nullable: true
+        backdrop_url:
+          type: string
+          format: uri
+          description: URL to the movie backdrop image
+          example: https://image.tmdb.org/t/p/w500/kXfqcdQKsToO0OUXHcrrNCHDBzO.jpg
+          nullable: true
+      required:
+        - title
+        - original_title
+        - director_name
+        - genre_name
+        - release_date
+        - runtime_minutes
+        - overview
+        - budget
+        - revenue
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: Internal server error
+      required:
+        - error
+
+    ApiInfo:
+      type: object
+      properties:
+        name:
+          type: string
+          example: TCSS 460 API
+        version:
+          type: string
+          example: 1.0.0
+        description:
+          type: string
+          example: RESTful API for movies
+        documentation:
+          type: string
+          example: /api-docs
+      required:
+        - name
+        - version
+        - description
+        - documentation
+
+externalDocs:
+  description: Find out more about this API
+  url: /api-docs

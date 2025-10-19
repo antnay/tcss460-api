@@ -1,0 +1,70 @@
+{
+  "name": "tcss-460-api",
+  "version": "1.0.0",
+  "main": "src/app.ts",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "local": "nodemon --exec ts-node -r tsconfig-paths/register -r dotenv/config src/app.ts",
+    "dev": "nodemon --watch src --exec ts-node -r tsconfig-paths/register src/app.ts",
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "start:full": "npm run docker:up && npm run local",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "lint:jsdoc": "eslint src",
+    "docs:check": "npm run lint:jsdoc",
+    "validate": "npm run typecheck && npm run lint && npm run test",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "dependencies": {
+    "@dotenvx/dotenvx": "^1.51.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "express-list-endpoints": "^7.1.1",
+    "highlight.js": "^11.11.1",
+    "marked": "^16.4.0",
+    "module-alias": "^2.2.3",
+    "pg": "^8.16.3",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/highlight.js": "^9.12.4",
+    "@types/jest": "^30.0.0",
+    "@types/marked": "^5.0.2",
+    "@types/node": "^24.8.1",
+    "@types/pg": "^8.15.5",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@types/yamljs": "^0.2.34",
+    "@typescript-eslint/eslint-plugin": "^8.44.1",
+    "@typescript-eslint/parser": "^8.44.1",
+    "eslint": "^9.36.0",
+    "eslint-plugin-jsdoc": "^60.5.0",
+    "express-validator": "^7.2.1",
+    "jest": "^30.1.3",
+    "nodemon": "^3.1.10",
+    "ts-jest": "^29.4.4",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.9.3"
+  },
+  "_moduleAliases": {
+    "@controllers": "dist/controllers",
+    "@routes": "dist/routes",
+    "@middleware": "dist/core/middleware",
+    "@utils": "dist/core/utils",
+    "@models": "dist/core/models",
+    "@db": "dist/core/utils/database",
+    "@/types": "dist/types"
+  }
+}
