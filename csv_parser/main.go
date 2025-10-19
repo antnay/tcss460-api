@@ -94,7 +94,7 @@ func importCSV(ctx context.Context, pool *pgxpool.Pool, csvPath string) error {
 
 	// Create CSV reader
 	reader := csv.NewReader(file)
-	reader.Comma = '\t' // Tab-separated
+	// reader.Comma = '\t' // Tab-separated
 	reader.LazyQuotes = true
 	reader.TrimLeadingSpace = true
 
@@ -154,13 +154,13 @@ func importCSV(ctx context.Context, pool *pgxpool.Pool, csvPath string) error {
 			log.Printf("Error inserting movie at row %d: %v\n", rowCount, err)
 			continue
 		}
+
 	}
 
 	// Commit transaction
 	if err := tx.Commit(ctx); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
-
 	log.Printf("Successfully imported %d movies\n", rowCount)
 	return nil
 }
