@@ -21,7 +21,7 @@
 - https://yazbwlbbshphswhvfvgt.supabase.co
 
 ## Contribution and Members
-- Anthony Naydyuk: 
+- Anthony Naydyuk: Setup server, testing, docs
 - Regan Lai: Setting up Database in Supabase 
 - Boyd Bouck: 
 - Hussein Sheikh:
