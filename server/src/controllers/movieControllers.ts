@@ -4,6 +4,7 @@ import { Request, Response } from 'express';
 
 /**
  * Fetch all movies, optionally filtering by release year.
+ * 
  * @param req - Express request object.
  * @param res - Express response object.
  */
@@ -21,12 +22,24 @@ export const getAllMovies = async (req: Request, res: Response) => {
 
   // Base SQL query
   let sql = `
-    select title, original_title, d.director_name, g.genre_name, release_date, runtime_minutes, overview, budget, revenue, mpa_rating, poster_url, backdrop_url
-    from movies as m
-    inner join movie_directors as md on m.movie_id = md.movie_id
-    inner join directors as d on md.director_id = d.director_id
-    inner join movie_genres as mg on m.movie_id = mg.movie_id
-    inner join genres as g on mg.genre_id = g.genre_id
+    SELECT 
+        m.title, 
+        m.original_title, 
+        STRING_AGG(DISTINCT d.director_name, ', ') as directors,
+        STRING_AGG(DISTINCT g.genre_name, ', ') as genres,
+        m.release_date, 
+        m.runtime_minutes, 
+        m.overview, 
+        m.budget::int8, 
+        m.revenue::int8, 
+        m.mpa_rating, 
+        m.poster_url, 
+        m.backdrop_url
+    FROM movies m
+    LEFT JOIN movie_directors md ON m.movie_id = md.movie_id
+    LEFT JOIN directors d ON md.director_id = d.director_id
+    LEFT JOIN movie_genres mg ON m.movie_id = mg.movie_id
+    LEFT JOIN genres g ON mg.genre_id = g.genre_id
   `;
 
   // Add a WHERE clause if the year filter is provided
@@ -36,11 +49,16 @@ export const getAllMovies = async (req: Request, res: Response) => {
     params.push(year);
   }
 
+  sql += `
+    GROUP BY m.movie_id, m.title, m.original_title, m.release_date, 
+             m.runtime_minutes, m.overview, m.budget, m.revenue, 
+             m.mpa_rating, m.poster_url, m.backdrop_url
+    ORDER BY m.title
+    `
+
   try {
-    // Execute the query with type annotation
     const result = await pool.query<Movie>(sql, params);
     
-    // result.rows is now typed as Movie[]
     const movies: Movie[] = result.rows;
     
     res.status(200).json(movies);

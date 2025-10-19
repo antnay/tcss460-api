@@ -4,8 +4,8 @@
 export interface Movie {
   title: string;
   original_title: string;
-  director_name: string;
-  genre_name: string;
+  directors: string;
+  genres: string;
   release_date: Date;
   runtime_minutes: number;
   overview: string;
@@ -22,13 +22,13 @@ export interface Movie {
 export interface MovieRow {
   title: string;
   original_title: string;
-  director_name: string;
-  genre_name: string;
+  directors: string;
+  genres: string;
   release_date: string | Date;
   runtime_minutes: number;
   overview: string;
-  budget: string | number;
-  revenue: string | number;
+  budget: number;
+  revenue: number;
   mpa_rating: string | null;
   poster_url: string | null;
   backdrop_url: string | null;
@@ -40,8 +40,8 @@ export interface MovieRow {
 export interface MovieOptional {
   title: string;
   original_title: string;
-  director_name: string;
-  genre_name: string;
+  directors: string;
+  genres: string;
   release_date: Date;
   runtime_minutes?: number;
   overview?: string;

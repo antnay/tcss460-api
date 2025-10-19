@@ -4,6 +4,8 @@ import { Request, Response } from 'express';
 /**
  * Returns a message stating whether database is up or down
  * 
+ * @param req - Express request object.
+ * @param res - Express response object.
  */
 export const healthCheck = async (req: Request, res: Response) => {
     try {
