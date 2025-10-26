@@ -4,6 +4,20 @@ import pool from '@utils/database';
 import { ApiError } from '@utils/httpError';
 import { HttpStatus } from '@utils/httpStatus';
 import { Request, Response } from 'express';
+import z from 'zod';
+
+/**
+ * Zod schema for validating pagination and filter query parameters.
+ * 
+ * @property year - Optional release year filter (must be a positive integer)
+ * @property page - Page number for pagination (default: 1, minimum: 1)
+ * @property limit - Number of results per page (default: 20, range: 1-100)
+ */
+const getAllMoviesSchema = z.object({
+  year: z.coerce.number().int().positive().optional(),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20)
+});
 
 /**
  * Get all movies that belong to a specific collection/franchise
@@ -56,7 +70,7 @@ export const getMoviesByCollection = async (req: Request, res: Response) => {
 
   try {
     const result = await pool.query(sql, [`%${collectionName}%`]);
-    
+
     if (result.rowCount === 0) {
       return res.status(HttpStatus.NOT_FOUND).json(
         ApiError.notFound('No movies found in the specified collection')
@@ -70,21 +84,89 @@ export const getMoviesByCollection = async (req: Request, res: Response) => {
 };
 
 /**
- * Fetch all movies, optionally filtering by release year.
+ * Retrieves all movies from the database with optional year filtering and pagination.
  * 
- * @param req - Express request object.
- * @param res - Express response object.
+ * Returns a paginated list of movies with aggregated relationship data
+ * (directors, genres). Movies are sorted alphabetically by title. Executes
+ * two parallel queries: one for the movie data and one for the total count.
+ * 
+ * **Query Features:**
+ * - Optional filtering by release year (exact match on release_date year)
+ * - Pagination support with configurable page size (1-100 items)
+ * - Aggregates multiple directors and genres into comma-separated strings
+ * - Returns complete movie metadata including financial data and media URLs
+ * - Parallel query execution for optimal performance
+ * 
+ * **Pagination Behavior:**
+ * - Default page size: 20 results
+ * - Maximum page size: 100 results
+ * - Returns pagination metadata including total count, pages, and navigation flags
+ * - Zero-indexed offset calculation: (page - 1) × limit
+ * 
+ * **Response Structure:**
+ * The response includes a `data` array containing Movie objects and a `pagination`
+ * object with navigation metadata.
+ * 
+ * @route GET /api/movies?year=YYYY&page=N&limit=N
+ * @param req - Express request object
+ * @param req.query.year - Optional 4-digit release year filter (must be positive integer)
+ * @param req.query.page - Page number starting from 1 (default: 1)
+ * @param req.query.limit - Number of movies per page, 1-100 (default: 20)
+ * @param res - Express response object
+ * @returns 200 - Paginated movie data with metadata
+ * @returns 400 - Invalid query parameters (Zod validation errors)
+ * @returns 500 - Database or server error
+ * 
+ * @example
+ * // Request: GET /api/movies?year=2023&page=2&limit=10
+ * // Response:
+ * {
+ *   "data": [
+ *     {
+ *       "title": "Oppenheimer",
+ *       "original_title": "Oppenheimer",
+ *       "directors": "Christopher Nolan",
+ *       "genres": "Biography, Drama, History",
+ *       "release_date": "2023-07-21T00:00:00.000Z",
+ *       "runtime_minutes": 180,
+ *       "overview": "The story of American scientist J. Robert Oppenheimer...",
+ *       "budget": 100000000,
+ *       "revenue": 952000000,
+ *       "mpa_rating": "R",
+ *       "poster_url": "https://image.tmdb.org/t/p/w500/...",
+ *       "backdrop_url": "https://image.tmdb.org/t/p/original/..."
+ *     }
+ *     // ... 9 more movies
+ *   ],
+ *   "pagination": {
+ *     "currentPage": 2,
+ *     "pageSize": 10,
+ *     "totalItems": 45,
+ *     "totalPages": 5,
+ *     "hasNextPage": true,
+ *     "hasPreviousPage": true
+ *   }
+ * }
+ * 
+ * @example
+ * // Request: GET /api/movies (no parameters - uses defaults)
+ * // Response: First 20 movies alphabetically with full pagination metadata
+ * 
+ * @example
+ * // Request: GET /api/movies?limit=5
+ * // Response: First 5 movies with pagination showing totalPages based on limit
  */
 export const getAllMovies = async (req: Request, res: Response) => {
-  const yearQuery = req.query.year;
-  let year: number | undefined;
-
-  if (typeof yearQuery === 'string') {
-    year = parseInt(yearQuery, 10);
-    if (isNaN(year)) {
-      return res.status(HttpStatus.BAD_REQUEST).json(ApiError.badRequest("year must be a number"));
-    }
+  const validation = getAllMoviesSchema.safeParse(req.query);
+  if (!validation.success) {
+    return res.status(HttpStatus.BAD_REQUEST).json(
+      ApiError.badRequest(validation.error.issues)
+    );
   }
+
+  const { year, page, limit } = validation.data;
+
+  const offset = (page - 1) * limit;
 
   let sql = `
     SELECT 
@@ -107,35 +189,87 @@ export const getAllMovies = async (req: Request, res: Response) => {
     LEFT JOIN genres g ON mg.genre_id = g.genre_id
   `;
 
-  // Add a WHERE clause if the year filter is provided
-  const params: (number | undefined)[] = [];
+  // Build count query for total items
+  let countSql = `
+    SELECT COUNT(DISTINCT m.movie_id) as total
+    FROM movies m
+  `;
+
+  // Add WHERE clause if year filter is provided
+  const params: number[] = [];
+  const countParams: number[] = [];
+  
   if (year) {
-    sql += 'WHERE EXTRACT(YEAR FROM release_date) = $1';
+    const whereClause = ' WHERE EXTRACT(YEAR FROM m.release_date) = $1';
+    sql += whereClause;
+    countSql += whereClause;
     params.push(year);
+    countParams.push(year);
   }
 
+  // Complete the main query with GROUP BY, ORDER BY, and pagination
   sql += `
     GROUP BY m.movie_id, m.title, m.original_title, m.release_date, 
              m.runtime_minutes, m.overview, m.budget, m.revenue, 
              m.mpa_rating, m.poster_url, m.backdrop_url
     ORDER BY m.title
-    `;
+    LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+  `;
+  
+  params.push(limit, offset);
 
   try {
-    const result = await pool.query<Movie>(sql, params);
-    const movies: Movie[] = result.rows;
-    res.status(200).json(movies);
+    // Execute both queries in parallel for better performance
+    const [moviesResult, countResult] = await Promise.all([
+      pool.query<Movie>(sql, params),
+      pool.query<{ total: string }>(countSql, countParams)
+    ]);
+
+    const movies: Movie[] = moviesResult.rows;
+    const totalItems = parseInt(countResult.rows[0].total, 10);
+    const totalPages = Math.ceil(totalItems / limit);
+
+    // Return paginated response with metadata
+    res.status(200).json({
+      data: movies,
+      pagination: {
+        currentPage: page,
+        pageSize: limit,
+        totalItems: totalItems,
+        totalPages: totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1
+      }
+    });
   } catch (error) {
-    return res.status(500).json(ApiError.internalError(error))
+    return res.status(500).json(ApiError.internalError(error));
   }
 };
 
 /**
+ * Retrieves a single movie by its unique ID.
  * 
- * @param req 
- * @param res 
+ * Returns detailed movie information including aggregated directors and genres.
+ * Performs a join across multiple tables to compile complete movie data.
+ * 
+ * **Query Features:**
+ * - Aggregates multiple directors and genres into comma-separated strings
+ * - Returns complete movie metadata including financial data and media URLs
+ * 
+ * @route GET /api/movies/:id
+ * @param req - Express request object
+ * @param req.params.id - The movie ID to retrieve (must be a valid number)
+ * @param res - Express response object
+ * @returns 200 - Movie object with complete details
+ * @returns 400 - Invalid ID parameter (not a number)
+ * @returns 404 - Movie not found with the specified ID
+ * @returns 500 - Database or server error
+ * 
+ * @example
+ * // Request: GET /api/movies/123
+ * // Response: Single movie object with all details
  */
-export const getMoviesById = async (req: Request, res: Response) => {
+export const getMovieById = async (req: Request, res: Response) => {
   const idParam = req.params.id;
   let id: number | undefined = 0;
 
@@ -179,7 +313,7 @@ export const getMoviesById = async (req: Request, res: Response) => {
     const movie: Movie = result.rows[0];
     res.status(200).json(movie);
   } catch (error) {
-    return res.status(500).json(ApiError.internalError(error))
+    return res.status(500).json(ApiError.internalError(error));
   }
 };
 

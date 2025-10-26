@@ -38,8 +38,12 @@ router.get('/movies/studio/search', c.getMoviesByStudio);
 router.get('/movies/director/search', c.getMoviesByDirector);
 router.get('/movies/actor/search', c.getMoviesByActor);
 router.get('/movies/collection/search', c.getMoviesByCollection);
+<<<<<<< HEAD
 >>>>>>> 1d8b584c764330a01aa22328de2a20c985530cba
 router.get('/movies/:id', c.getMoviesById);
+=======
+router.get('/movies/:id', c.getMovieById);
+>>>>>>> d1473a3eb23e505548d431124f84e2ca74c2182b
 
 // POST routes - Add movies
 router.post('/movies', c.addMovie);

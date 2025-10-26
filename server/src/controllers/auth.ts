@@ -30,6 +30,57 @@ const verifySchema = z.object({
     token: z.string()
 });
 
+
+/**
+ * Authenticates a user and creates a new session.
+ * 
+ * Validates user credentials using Argon2 password hashing, generates JWT tokens
+ * (access and refresh), and stores the refresh token in the database session table.
+ * Sets a refresh token cookie and returns an access token in the response body.
+ * 
+ * **Process Flow:**
+ * 1. Validates request body against loginSchema (email, password)
+ * 2. Queries database for user by email
+ * 3. Verifies password using Argon2
+ * 4. Generates JWT access and refresh tokens
+ * 5. Updates refresh token in sessions table
+ * 6. Sets HTTP-only cookie with refresh token
+ * 7. Returns access token and user info in response
+ * 
+ * **Security Features:**
+ * - Argon2 password hashing verification
+ * - JWT-based authentication with separate access/refresh tokens
+ * - Refresh token stored securely in HTTP-only cookie
+ * - Session persistence in database
+ * 
+ * @route POST /api/auth/login
+ * @param req - Express request object
+ * @param req.body.email - User's email address (must be valid email format)
+ * @param req.body.password - User's password (minimum 8 characters)
+ * @param res - Express response object
+ * @returns 200 - Success with user info and JWT access token
+ * @returns 400 - Invalid credentials or validation errors
+ * @returns 401 - Incorrect password
+ * @returns 500 - Database or server error
+ * 
+ * @example
+ * // Request body:
+ * {
+ *   "email": "user@example.com",
+ *   "password": "securePassword123"
+ * }
+ * 
+ * @example
+ * // Success response:
+ * {
+ *   "username": "johndoe",
+ *   "role": "user",
+ *   "jwt": {
+ *     "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+ *     "type": "Bearer"
+ *   }
+ * }
+ */
 export const login = async (req: Request, res: Response) => {
     const validation = loginSchema.safeParse(req.body);
     if (!validation.success) {
@@ -93,7 +144,67 @@ export const login = async (req: Request, res: Response) => {
     res.status(200).json(out);
 };
 
-
+/**
+ * Registers a new user account with authentication credentials.
+ * 
+ * Creates a new user with hashed password, generates JWT tokens, and establishes
+ * an initial session. Uses a database transaction to ensure atomicity across
+ * multiple table inserts (users, password_login, sessions).
+ * 
+ * **Process Flow:**
+ * 1. Validates request body against registerSchema
+ * 2. Checks for existing users with same email or username
+ * 3. Hashes password using Argon2
+ * 4. Generates JWT access and refresh tokens
+ * 5. Creates user, password, and session records in transaction
+ * 6. Sets HTTP-only cookie with refresh token
+ * 7. Returns access token and user info in response
+ * 
+ * **Security Features:**
+ * - Argon2 password hashing for secure storage
+ * - Email and username uniqueness validation
+ * - JWT-based authentication with separate access/refresh tokens
+ * - Transactional integrity across multiple tables
+ * - Refresh token stored in HTTP-only cookie
+ * 
+ * **Validation Rules:**
+ * - Username: 3-50 characters
+ * - Email: Valid email format
+ * - Password: Minimum 8 characters
+ * - Role: Must be 'user' or 'admin'
+ * 
+ * @route POST /api/auth/register
+ * @param req - Express request object
+ * @param req.body.username - Desired username (3-50 characters, must be unique)
+ * @param req.body.email - Email address (valid format, must be unique)
+ * @param req.body.password - Password (minimum 8 characters)
+ * @param req.body.role - User role ('user' or 'admin')
+ * @param res - Express response object
+ * @returns 200 - Success with user info and JWT access token
+ * @returns 400 - Validation errors (invalid format or missing fields)
+ * @returns 409 - Conflict - email or username already exists
+ * @returns 500 - Database or server error (transaction rolled back)
+ * 
+ * @example
+ * // Request body:
+ * {
+ *   "username": "johndoe",
+ *   "email": "john@example.com",
+ *   "password": "securePassword123",
+ *   "role": "user"
+ * }
+ * 
+ * @example
+ * // Success response:
+ * {
+ *   "username": "johndoe",
+ *   "role": "user",
+ *   "jwt": {
+ *     "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+ *     "type": "Bearer"
+ *   }
+ * }
+ */
 export const register = async (req: Request, res: Response) => {
     const validation = registerSchema.safeParse(req.body);
     if (!validation.success) {
