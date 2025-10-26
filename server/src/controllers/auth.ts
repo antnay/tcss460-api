@@ -8,18 +8,20 @@ import { randomBytes } from 'node:crypto';
 import z from 'zod';
 import argon2 from 'argon2';
 
-const saltRounds = 10;
-
 const loginSchema = z.object({
-    email: z.email(),
-    password: z.string().min(8)
+    email: z.email("email must be formatted as an email"),
+    password: z.string("password must be a string")
+        .min(8, "password must be greater than 8 characters"),
 });
 
 const registerSchema = z.object({
-    username: z.string().min(3).max(50),
-    email: z.email(),
-    password: z.string().min(8),
-    role: z.enum(['user', 'admin']),
+    username: z.string("username must be a string")
+        .min(3, "username must be greater than 3 characters")
+        .max(50, "username must be less than 50 characters"),
+    email: z.email("email must be formatted as an email"),
+    password: z.string("password must be a string")
+        .min(8, "password must be greater than 8 characters"),
+    role: z.enum(['user', 'admin'], "role must be either 'user' or 'admin'"),
 });
 
 const verifySchema = z.object({
@@ -31,7 +33,7 @@ const verifySchema = z.object({
 export const login = async (req: Request, res: Response) => {
     const validation = loginSchema.safeParse(req.body);
     if (!validation.success) {
-        return res.status(HttpStatus.BAD_REQUEST).json(ApiError.badRequest(validation.error.message));
+        return res.status(HttpStatus.BAD_REQUEST).json(ApiError.badRequest(validation.error.issues));
     }
     const { email, password } = validation.data;
 
@@ -50,8 +52,8 @@ export const login = async (req: Request, res: Response) => {
             LEFT JOIN sessions AS s USING (user_id)
         WHERE u.email = $1
         `, [email]);
-        if (!q) { return res.status(HttpStatus.BAD_REQUEST).json(ApiError.badRequest("user does not exist")); }
         user = q.rows[0] as User;
+        if (!q || !user) { return res.status(HttpStatus.BAD_REQUEST).json(ApiError.badRequest("user does not exist")); }
     } catch (e) {
         return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(ApiError.internalError(e));
     }
@@ -95,13 +97,25 @@ export const login = async (req: Request, res: Response) => {
 export const register = async (req: Request, res: Response) => {
     const validation = registerSchema.safeParse(req.body);
     if (!validation.success) {
-        res.status(HttpStatus.BAD_REQUEST).json(ApiError.badRequest(validation.error.message));
-        return;
+        return res.status(HttpStatus.BAD_REQUEST).json(ApiError.badRequest(validation.error.issues));
     }
 
     const { username, email, password, role } = validation.data;
 
-    const salt = randomBytes(16);
+    try {
+        const existingUser = await pool.query(
+            'SELECT user_id FROM users WHERE email = $1 OR username = $2',
+            [email, username]
+        );
+        if (existingUser.rows.length > 0) {
+            return res.status(HttpStatus.CONFLICT).json(
+                ApiError.conflict('User with this email or username already exists')
+            );
+        }
+    } catch (e) {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(ApiError.internalError(e));
+    }
+
     const passwordHashBytes = await argon2.hash(password);
     const passwordHash: string = passwordHashBytes.toString();
 

@@ -8,7 +8,6 @@ router.get('/health', c.healthCheck);
 
 router.post('/login', c.login)
 router.post('/register', c.register)
-// router.post('/verify', c.verify)
 
 router.get('/movies', c.getAllMovies);
 router.get('/movies/:id', c.getMoviesById);

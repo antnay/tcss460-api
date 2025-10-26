@@ -92,7 +92,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "X-Powered-By",
@@ -136,7 +136,7 @@
 			"description": "Health check endpoints for monitoring database connectivity"
 		},
 		{
-			"name": "Movies",
+			"name": "Get movies",
 			"item": [
 				{
 					"name": "Get All Movies - Success",
@@ -284,8 +284,7 @@
 									"    const jsonData = pm.response.json();",
 									"    jsonData.forEach(movie => {",
 									"        pm.expect(movie).to.have.property('title');",
-									"        pm.expect(movie).to.have.property('directors');",
-									"        pm.expect(movie).to.have.property('geners');",
+									"        pm.expect(movie).to.have.property('genres');",
 									"        pm.expect(movie).to.have.property('release_date');",
 									"    });",
 									"});",
@@ -349,7 +348,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "X-Powered-By",
@@ -586,7 +585,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "X-Powered-By",
@@ -696,7 +695,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "X-Powered-By",
@@ -806,7 +805,7 @@
 							},
 							"status": "Bad Request",
 							"code": 400,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "X-Powered-By",
@@ -1078,7 +1077,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "X-Powered-By",
@@ -1120,6 +1119,752 @@
 				}
 			],
 			"description": "API information and metadata endpoints"
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"someemail1@gmail.com\",\n    \"password\": \"test123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"login"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "ok login",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"someemail1@gmail.com\",\n    \"password\": \"test123456\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"login"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Set-Cookie",
+									"value": "refresh-token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6InRlc3QyIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NjE0NTY5MjgsImV4cCI6MTc2MjA2MTcyOH0.1bQfWTOlVrQcxT6MIhdBr2gu8pHZdnG8RKtEmOlOkYs; Path=/"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "247"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"f7-jsKdxNGZMoXtqSRSsnrpxINg6ME\""
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 26 Oct 2025 05:35:28 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"username\": \"test2\",\n    \"role\": \"user\",\n    \"jwt\": {\n        \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6InRlc3QyIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NjE0NTY5MjgsImV4cCI6MTc2MTQ2NzcyOH0.oIHIoWNvi35ypxJS43N1xttKXeq4VcFux2Klpwi9mI8\",\n        \"type\": \"Bearer\"\n    }\n}"
+						},
+						{
+							"name": "empty password",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"someemail1@gmail.com\",\n    \"password\": \"\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"login"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "212"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"d4-j/voyy7hNZHxmFrLnwsq2SsB9LY\""
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 26 Oct 2025 05:46:23 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"statusCode\": 400,\n    \"message\": [\n        {\n            \"origin\": \"string\",\n            \"code\": \"too_small\",\n            \"minimum\": 8,\n            \"inclusive\": true,\n            \"path\": [\n                \"password\"\n            ],\n            \"message\": \"password must be greater than 8 characters\"\n        }\n    ],\n    \"timestamp\": \"2025-10-26T05:46:23.035Z\"\n}"
+						},
+						{
+							"name": "bad email and password",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"gmail.com\",\n    \"password\": \"\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"login"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "456"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"1c8-AQbpgNId2BdEE94dT2TxeZiWqpw\""
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 26 Oct 2025 05:47:07 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"statusCode\": 400,\n    \"message\": [\n        {\n            \"origin\": \"string\",\n            \"code\": \"invalid_format\",\n            \"format\": \"email\",\n            \"pattern\": \"/^(?!\\\\.)(?!.*\\\\.\\\\.)([A-Za-z0-9_'+\\\\-\\\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\\\-]*\\\\.)+[A-Za-z]{2,}$/\",\n            \"path\": [\n                \"email\"\n            ],\n            \"message\": \"email must be formatted as an email\"\n        },\n        {\n            \"origin\": \"string\",\n            \"code\": \"too_small\",\n            \"minimum\": 8,\n            \"inclusive\": true,\n            \"path\": [\n                \"password\"\n            ],\n            \"message\": \"password must be greater than 8 characters\"\n        }\n    ],\n    \"timestamp\": \"2025-10-26T05:47:07.904Z\"\n}"
+						},
+						{
+							"name": "incorrect password",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"someemail1@gmail.com\",\n    \"password\": \"test123456d\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"login"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "94"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"5e-hF0WBHO+DaW6PRmtFln5T2MDZMs\""
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 26 Oct 2025 05:47:34 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"statusCode\": 401,\n    \"message\": \"incorrect login provided\",\n    \"timestamp\": \"2025-10-26T05:47:34.630Z\"\n}"
+						},
+						{
+							"name": "user does not exist",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"someemil1@gmail.com\",\n    \"password\": \"test123456d\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"login"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "89"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"59-mjkm61k3KWFQzmyHOI7XHgQvruY\""
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 26 Oct 2025 05:48:25 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"statusCode\": 400,\n    \"message\": \"user does not exist\",\n    \"timestamp\": \"2025-10-26T05:48:25.045Z\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"test2\",\n    \"email\": \"someemail1@gmail.com\",\n    \"password\": \"test123456\",\n    \"role\": \"user\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"register"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "ok login",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"test2\",\n    \"email\": \"someemail1@gmail.com\",\n    \"password\": \"test123456\",\n    \"role\": \"user\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"register"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Set-Cookie",
+									"value": "refresh-token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6InRlc3QyIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NjE0NTU4MzksImV4cCI6MTc2MjA2MDYzOX0.5hGRCBH91caq5A3tvr-2MQ1cET0fYyvlI-1rQWYFI7g; Path=/"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "247"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"f7-L82xI7t593U5bUkVoB8HCYIC1v0\""
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 26 Oct 2025 05:17:19 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"username\": \"test2\",\n    \"role\": \"user\",\n    \"jwt\": {\n        \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6InRlc3QyIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NjE0NTU4MzksImV4cCI6MTc2MTQ2NjYzOX0.wnqfLlrLnBY12le72SF_DzDhK2Nji51aT50rB0ztYdU\",\n        \"type\": \"Bearer\"\n    }\n}"
+						},
+						{
+							"name": "all validation errors",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"\",\n    \"email\": \"gmail.com\",\n    \"password\": \"t456\",\n    \"role\": \"not real role\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"register"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "716"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"2cc-CC71ue6+J9CInMksSQ6f4W3A37c\""
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 26 Oct 2025 05:49:11 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"statusCode\": 400,\n    \"message\": [\n        {\n            \"origin\": \"string\",\n            \"code\": \"too_small\",\n            \"minimum\": 3,\n            \"inclusive\": true,\n            \"path\": [\n                \"username\"\n            ],\n            \"message\": \"username must be greater than 3 characters\"\n        },\n        {\n            \"origin\": \"string\",\n            \"code\": \"invalid_format\",\n            \"format\": \"email\",\n            \"pattern\": \"/^(?!\\\\.)(?!.*\\\\.\\\\.)([A-Za-z0-9_'+\\\\-\\\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\\\-]*\\\\.)+[A-Za-z]{2,}$/\",\n            \"path\": [\n                \"email\"\n            ],\n            \"message\": \"email must be formatted as an email\"\n        },\n        {\n            \"origin\": \"string\",\n            \"code\": \"too_small\",\n            \"minimum\": 8,\n            \"inclusive\": true,\n            \"path\": [\n                \"password\"\n            ],\n            \"message\": \"password must be greater than 8 characters\"\n        },\n        {\n            \"code\": \"invalid_value\",\n            \"values\": [\n                \"user\",\n                \"admin\"\n            ],\n            \"path\": [\n                \"role\"\n            ],\n            \"message\": \"role must be either 'user' or 'admin'\"\n        }\n    ],\n    \"timestamp\": \"2025-10-26T05:49:11.738Z\"\n}"
+						},
+						{
+							"name": "conflicting info",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"test2\",\n    \"email\": \"someemail1@gmail.com\",\n    \"password\": \"test123456\",\n    \"role\": \"user\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"register"
+									]
+								}
+							},
+							"status": "Conflict",
+							"code": 409,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "117"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"75-40S1qjuXuUe0F8EguWrrkIfVVTo\""
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 26 Oct 2025 05:54:42 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"statusCode\": 400,\n    \"message\": \"User with this email or username already exists\",\n    \"timestamp\": \"2025-10-26T05:54:42.618Z\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Get movie by id",
+			"item": [
+				{
+					"name": "Get movie by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/movies/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"movies",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "New Request",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/movies/:id",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"movies",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "4"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "620"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"26c-XJjfsLv8E4vRjBUFaMEyidGiDtw\""
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 26 Oct 2025 05:56:22 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"title\": \"War of the Worlds\",\n    \"original_title\": \"War of the Worlds\",\n    \"directors\": \"Rich Lee\",\n    \"genres\": \"Science Fiction, Thriller\",\n    \"release_date\": \"2025-07-29T07:00:00.000Z\",\n    \"runtime_minutes\": 91,\n    \"overview\": \"Will Radford is a top analyst for Homeland Security who tracks potential threats through a mass surveillance program, until one day an attack by an unknown entity leads him to question whether the government is hiding something from him... and from the rest of the world.\",\n    \"budget\": \"0\",\n    \"revenue\": \"0\",\n    \"mpa_rating\": \"PG-13\",\n    \"poster_url\": \"/yvirUYrva23IudARHn3mMGVxWqM.jpg\",\n    \"backdrop_url\": \"/iZLqwEwUViJdSkGVjePGhxYzbDb.jpg\"\n}"
+						},
+						{
+							"name": "New Request",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/movies/:id",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"movies",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "-1"
+										}
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "",
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "85"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"55-VvyukoDAHu6iNU9QL7jq6fDGCHM\""
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 26 Oct 2025 05:56:30 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"statusCode\": 404,\n    \"message\": \"movie not found\",\n    \"timestamp\": \"2025-10-26T05:56:30.730Z\"\n}"
+						}
+					]
+				}
+			]
 		}
 	],
 	"event": [
