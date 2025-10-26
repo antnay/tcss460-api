@@ -413,6 +413,187 @@ export const getMoviesByDirector = async (req: Request, res: Response) => {
 };
 
 /**
+ * Advanced multi-criteria search for movies
+ * Combines multiple filters to create highly specific searches
+ * 
+ * @param req - Express request object with query parameters:
+ *              - genre: genre name filter (optional)
+ *              - actor: actor name filter (optional)
+ *              - studio: studio name filter (optional)
+ *              - mpaRating: MPA rating filter (optional)
+ *              - minBudget: minimum budget threshold (optional)
+ *              - maxBudget: maximum budget threshold (optional)
+ *              - startDate: release date range start (optional, ISO format)
+ *              - endDate: release date range end (optional, ISO format)
+ * @param res - Express response object
+ */
+export const getMoviesByMultiFilter = async (req: Request, res: Response) => {
+  const {
+    genre,
+    actor,
+    studio,
+    mpaRating,
+    minBudget,
+    maxBudget,
+    startDate,
+    endDate
+  } = req.query;
+
+  // Validate at least one filter is provided
+  if (!genre && !actor && !studio && !mpaRating && !minBudget && !maxBudget && !startDate && !endDate) {
+    return res.status(HttpStatus.BAD_REQUEST).json(
+      ApiError.badRequest("At least one search criteria must be provided")
+    );
+  }
+
+  // Build WHERE clause dynamically based on provided filters
+  const whereConditions: string[] = [];
+  const params: (string | number | Date)[] = [];
+  let paramCounter = 1;
+
+  // Genre filter
+  if (typeof genre === 'string' && genre.trim()) {
+    whereConditions.push(`EXISTS (
+      SELECT 1 FROM movie_genres mg2 
+      JOIN genres g2 ON mg2.genre_id = g2.genre_id 
+      WHERE mg2.movie_id = m.movie_id 
+      AND LOWER(g2.genre_name) LIKE LOWER($${paramCounter})
+    )`);
+    params.push(`%${genre.trim()}%`);
+    paramCounter++;
+  }
+
+  // Actor filter
+  if (typeof actor === 'string' && actor.trim()) {
+    whereConditions.push(`EXISTS (
+      SELECT 1 FROM movie_actors ma2 
+      JOIN actors a2 ON ma2.actor_id = a2.actor_id 
+      WHERE ma2.movie_id = m.movie_id 
+      AND LOWER(a2.actor_name) LIKE LOWER($${paramCounter})
+    )`);
+    params.push(`%${actor.trim()}%`);
+    paramCounter++;
+  }
+
+  // Studio filter
+  if (typeof studio === 'string' && studio.trim()) {
+    whereConditions.push(`EXISTS (
+      SELECT 1 FROM movie_studios ms2 
+      JOIN studios s2 ON ms2.studio_id = s2.studio_id 
+      WHERE ms2.movie_id = m.movie_id 
+      AND LOWER(s2.studio_name) LIKE LOWER($${paramCounter})
+    )`);
+    params.push(`%${studio.trim()}%`);
+    paramCounter++;
+  }
+
+  // MPA Rating filter
+  if (typeof mpaRating === 'string' && mpaRating.trim()) {
+    whereConditions.push(`m.mpa_rating = $${paramCounter}`);
+    params.push(mpaRating.trim().toUpperCase());
+    paramCounter++;
+  }
+
+  // Budget range filters
+  if (typeof minBudget === 'string') {
+    const minBudgetNum = parseInt(minBudget);
+    if (!isNaN(minBudgetNum)) {
+      whereConditions.push(`m.budget >= $${paramCounter}`);
+      params.push(minBudgetNum);
+      paramCounter++;
+    }
+  }
+
+  if (typeof maxBudget === 'string') {
+    const maxBudgetNum = parseInt(maxBudget);
+    if (!isNaN(maxBudgetNum)) {
+      whereConditions.push(`m.budget <= $${paramCounter}`);
+      params.push(maxBudgetNum);
+      paramCounter++;
+    }
+  }
+
+  // Date range filters
+  if (typeof startDate === 'string') {
+    try {
+      const date = new Date(startDate);
+      if (!isNaN(date.getTime())) {
+        whereConditions.push(`m.release_date >= $${paramCounter}`);
+        params.push(date);
+        paramCounter++;
+      }
+    } catch (error) {
+      // Invalid date format, ignore this filter
+    }
+  }
+
+  if (typeof endDate === 'string') {
+    try {
+      const date = new Date(endDate);
+      if (!isNaN(date.getTime())) {
+        whereConditions.push(`m.release_date <= $${paramCounter}`);
+        params.push(date);
+        paramCounter++;
+      }
+    } catch (error) {
+      // Invalid date format, ignore this filter
+    }
+  }
+
+  const sql = `
+    SELECT 
+      m.title,
+      m.original_title,
+      STRING_AGG(DISTINCT d.director_name, ', ') as directors,
+      STRING_AGG(DISTINCT g.genre_name, ', ') as genres,
+      STRING_AGG(DISTINCT s.studio_name, ', ') as studios,
+      m.release_date,
+      m.runtime_minutes,
+      m.overview,
+      m.budget::int8,
+      m.revenue::int8,
+      m.mpa_rating,
+      m.poster_url,
+      m.backdrop_url,
+      c.collection_name,
+      (m.revenue - m.budget)::int8 as profit,
+      ARRAY_AGG(DISTINCT JSONB_BUILD_OBJECT(
+        'actor_name', a.actor_name,
+        'character_name', ma.character_name,
+        'profile_url', a.profile_url
+      )) FILTER (WHERE a.actor_id IS NOT NULL) as cast_members
+    FROM movies m
+    LEFT JOIN collections c ON m.collection_id = c.collection_id
+    LEFT JOIN movie_directors md ON m.movie_id = md.movie_id
+    LEFT JOIN directors d ON md.director_id = d.director_id
+    LEFT JOIN movie_genres mg ON m.movie_id = mg.movie_id
+    LEFT JOIN genres g ON mg.genre_id = g.genre_id
+    LEFT JOIN movie_studios ms ON m.movie_id = ms.movie_id
+    LEFT JOIN studios s ON ms.studio_id = s.studio_id
+    LEFT JOIN movie_actors ma ON m.movie_id = ma.movie_id
+    LEFT JOIN actors a ON ma.actor_id = a.actor_id
+    ${whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : ''}
+    GROUP BY 
+      m.movie_id, m.title, m.original_title, m.release_date,
+      m.runtime_minutes, m.overview, m.budget, m.revenue,
+      m.mpa_rating, m.poster_url, m.backdrop_url, c.collection_name
+    ORDER BY m.release_date DESC
+  `;
+
+  try {
+    const result = await pool.query(sql, params);
+    if (result.rowCount === 0) {
+      return res.status(HttpStatus.NOT_FOUND).json(
+        ApiError.notFound('No movies found matching all specified criteria')
+      );
+    }
+    res.status(200).json(result.rows);
+  } catch (error) {
+    return res.status(500).json(ApiError.internalError(error));
+  }
+};
+
+/**
  * Search for movies by studio name
  * Returns all movies produced by the specified studio, including co-productions
  * 
