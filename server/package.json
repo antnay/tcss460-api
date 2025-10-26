@@ -25,6 +25,9 @@
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.51.0",
+    "@node-rs/argon2": "^2.0.2",
+    "argon2": "^0.44.0",
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
@@ -37,7 +40,8 @@
     "module-alias": "^2.2.3",
     "pg": "^8.16.3",
     "swagger-ui-express": "^5.0.1",
-    "yamljs": "^0.3.0"
+    "yamljs": "^0.3.0",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

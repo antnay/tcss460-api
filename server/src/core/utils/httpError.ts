@@ -30,7 +30,6 @@ export class ApiError {
     return this.createResponse(500, 'internal server error');
   }
 
-  // Optional: Add common error helpers
   static badRequest(message: string = 'Bad request'): ErrorResponse {
     return this.createResponse(400, message);
   }
