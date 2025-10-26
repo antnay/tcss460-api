@@ -1,21 +1,14 @@
 import { Router } from 'express';
-import { getAllMovies, healthCheck } from '@controllers';
-
+import * as c from '../controllers/index'
 export const router = Router();
 
-router.get('/health', healthCheck);
-router.get('/movies', getAllMovies);
-// router.get('/api/movies/:id', getMoviesById);
-// router.post('/api/movies', createMovie)
 
-// API information
-router.get('/api-info', (request, response) => {
-    response.json({
-        name: 'TCSS 460 API',
-        version: '1.0.0',
-        description: 'RESTful API for movies',
-        documentation: '/api-docs'
-    });
-});
+router.get('/api-info', c.info);
+router.get('/health', c.healthCheck);
+
+router.get('/movies', c.getAllMovies);
+router.get('/movies/:id', c.getMoviesById);
+
+router.post('/movies', c.addMovie);
 
 export default router;

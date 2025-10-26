@@ -1,12 +1,12 @@
 import 'module-alias/register';
 import express, { Application } from 'express';
-import dotenv from 'dotenv';
 import cors from 'cors';
 import dotenvx from '@dotenvx/dotenvx';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import path from 'path'; import { initializeDatabase, closeDatabase } from '@db';
 import router from './routes';
+import { errorHandler } from '@middleware/errorHandler';
 
 dotenvx.config({ path: '../.env' });
 

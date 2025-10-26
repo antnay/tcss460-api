@@ -1,27 +1,42 @@
-FROM node:23-alpine
+# ==========================
+# Stage 1 — Base Environment
+# ==========================
+FROM node:23-alpine AS base
 
 WORKDIR /server-app
 
-# Copy package files and install dependencies
-COPY server/package.json server/package-lock.json ./
+# Copy only package files first (for caching)
+COPY package*.json ./
 RUN npm ci
 
-# Install nodemon globally for hot reloading
 RUN npm install -g nodemon
 
-# Copy the rest of the application code
-COPY server/ ./
+# ==========================
+# Stage 2 — Development
+# ==========================
+FROM base AS development
 
-# Build the application (if needed for production)
+# Copy source code
+COPY . .
+
+CMD ["npm", "run", "dev"]
+
+
+# ==========================
+# Stage 3 — Production
+# ==========================
+FROM base AS production
+
+ENV NODE_ENV=production
+
+# Copy all files for building
+COPY . .
+
+# Build the project
 RUN npm run build
 
-# Default command to run the server
-CMD if [ "$NODE_ENV" = "production" ]; then \
-        echo "Starting production server"; \
-        exec npm run start; \
-    else \
-        echo "Starting development server with hot reload"; \
-        exec npm run dev; \
-    fi
+# Clean up dev dependencies
+RUN npm prune --production
 
-
+# Run the built app
+CMD ["npm", "run", "start"]
