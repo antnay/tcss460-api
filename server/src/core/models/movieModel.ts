@@ -1,75 +1,5 @@
-// /**
-//  * Movie model representing a complete movie with director and genre information
-//  */
-// export interface Movie {
-//   title: string;
-//   original_title: string;
-//   directors: string;
-//   genres: string;
-//   release_date: Date;
-//   runtime_minutes: number;
-//   overview: string;
-//   budget: number;
-//   revenue: number;
-//   mpa_rating: string;
-//   poster_url: string;
-//   backdrop_url: string;
-// }
-
-// /**
-//  * Raw movie data from database (before type conversion)
-//  */
-// export interface MovieRow {
-//   title: string;
-//   original_title: string;
-//   directors: string;
-//   genres: string;
-//   release_date: string | Date;
-//   runtime_minutes: number;
-//   overview: string;
-//   budget: number;
-//   revenue: number;
-//   mpa_rating: string | null;
-//   poster_url: string | null;
-//   backdrop_url: string | null;
-// }
-
-// /**
-//  * Movie with optional fields (for partial data or nullable columns)
-//  */
-// export interface MovieOptional {
-//   title: string;
-//   original_title: string;
-//   directors: string;
-//   genres: string;
-//   release_date: Date;
-//   runtime_minutes?: number;
-//   overview?: string;
-//   budget?: number;
-//   revenue?: number;
-//   mpa_rating?: string | null;
-//   poster_url?: string | null;
-//   backdrop_url?: string | null;
-// }
-
 /**
- * Movie model representing a complete movie entity with all required fields.
- * 
- * This interface represents the fully-typed movie object used throughout the application
- * after database retrieval and type conversion. All fields are required and properly typed.
- * 
- * @property title - The display title of the movie
- * @property original_title - The original title in the movie's native language
- * @property directors - Comma-separated string of director names
- * @property genres - Comma-separated string of genre classifications
- * @property release_date - The theatrical release date
- * @property runtime_minutes - Total duration of the movie in minutes
- * @property overview - Plot synopsis or description of the movie
- * @property budget - Production budget in USD
- * @property revenue - Box office revenue in USD
- * @property mpa_rating - MPAA rating (G, PG, PG-13, R, NC-17, etc.)
- * @property poster_url - URL to the movie's poster image
- * @property backdrop_url - URL to the movie's backdrop/banner image
+ * Complete movie model representing a full movie entity.
  */
 export interface Movie {
   title: string;
@@ -87,28 +17,7 @@ export interface Movie {
 }
 
 /**
- * Raw movie data structure as retrieved directly from the database.
- * 
- * This interface represents the unprocessed movie data before type conversion.
- * String and nullable fields reflect the raw database schema and require
- * transformation to the Movie interface for application use.
- * 
- * Key differences from Movie interface:
- * - release_date may be a string (ISO format) that needs Date conversion
- * - mpa_rating, poster_url, and backdrop_url are nullable
- * 
- * @property title - The display title of the movie
- * @property original_title - The original title in the movie's native language
- * @property directors - Comma-separated string of director names
- * @property genres - Comma-separated string of genre classifications
- * @property release_date - Release date as string (ISO format) or Date object
- * @property runtime_minutes - Total duration of the movie in minutes
- * @property overview - Plot synopsis or description of the movie
- * @property budget - Production budget in USD
- * @property revenue - Box office revenue in USD
- * @property mpa_rating - MPAA rating (nullable if unavailable)
- * @property poster_url - URL to the movie's poster image (nullable if unavailable)
- * @property backdrop_url - URL to the movie's backdrop image (nullable if unavailable)
+ * Raw movie data from database (before type conversion)
  */
 export interface MovieRow {
   title: string;
@@ -126,29 +35,7 @@ export interface MovieRow {
 }
 
 /**
- * Movie model with optional fields for partial data scenarios.
- * 
- * This interface is useful for:
- * - Partial movie updates where not all fields are provided
- * - API responses that may omit certain fields
- * - Form submissions during movie creation/editing
- * - Handling incomplete movie data from external sources
- * 
- * Core identifying fields (title, original_title, directors, genres, release_date)
- * remain required, while supplementary information is optional.
- * 
- * @property title - The display title of the movie (required)
- * @property original_title - The original title in the movie's native language (required)
- * @property directors - Comma-separated string of director names (required)
- * @property genres - Comma-separated string of genre classifications (required)
- * @property release_date - The theatrical release date (required)
- * @property runtime_minutes - Total duration in minutes (optional)
- * @property overview - Plot synopsis (optional)
- * @property budget - Production budget in USD (optional)
- * @property revenue - Box office revenue in USD (optional)
- * @property mpa_rating - MPAA rating (optional, nullable)
- * @property poster_url - URL to poster image (optional, nullable)
- * @property backdrop_url - URL to backdrop image (optional, nullable)
+ * Movie with optional fields (for partial data or nullable columns)
  */
 export interface MovieOptional {
   title: string;
@@ -166,18 +53,7 @@ export interface MovieOptional {
 }
 
 /**
- * Audit log entry for tracking deleted movies.
- * 
- * This interface represents a record in the deletion audit log, preserving
- * key information about movies that have been removed from the system.
- * Used for compliance, data recovery, and audit trail purposes.
- * 
- * @property movie_id - The unique identifier of the deleted movie
- * @property title - The display title of the deleted movie
- * @property original_title - The original title (nullable if not available)
- * @property release_date - The theatrical release date (nullable if not available)
- * @property deleted_at - Timestamp when the movie was deleted
- * @property deleted_by - Username or identifier of the user who deleted the movie (optional)
+ * Audit log entry for tracking deleted movies
  */
 export interface MovieDeletionLog {
   movie_id: number;
@@ -186,4 +62,103 @@ export interface MovieDeletionLog {
   release_date: Date | null;
   deleted_at: Date;
   deleted_by?: string;
+}
+
+/**
+ * Cast member information for a movie
+ */
+export interface CastMember {
+  actor_name: string;
+  character_name?: string;
+  profile_url?: string;
+  actor_order: number; // 1-10
+}
+
+/**
+ * Studio information
+ */
+export interface Studio {
+  studio_name: string;
+  logo_url?: string;
+  country?: string;
+}
+
+/**
+ * Input for creating a new movie (all related entities as arrays)
+ */
+export interface MovieCreateInput {
+  // Required fields
+  title: string;
+  original_title: string;
+  release_date: string; // YYYY-MM-DD format
+  runtime_minutes: number;
+  genres: string[]; // Array of genre names
+  overview: string;
+  mpa_rating: string; // PG, PG-13, R
+  
+  // Optional financial data
+  budget?: number;
+  revenue?: number;
+  
+  // Optional related entities
+  directors?: string[]; // Array of director names
+  producers?: string[]; // Array of producer names
+  studios?: Studio[]; // Array of studio objects
+  cast?: CastMember[]; // Array of cast members (max 10)
+  
+  // Optional visual assets
+  poster_url?: string;
+  backdrop_url?: string;
+  
+  // Optional collection
+  collection_name?: string;
+}
+
+/**
+ * Input for updating a movie (all fields optional except what's being updated)
+ */
+export interface MovieUpdateInput {
+  title?: string;
+  original_title?: string;
+  release_date?: string;
+  runtime_minutes?: number;
+  overview?: string;
+  budget?: number;
+  revenue?: number;
+  mpa_rating?: string;
+  poster_url?: string;
+  backdrop_url?: string;
+  
+  // Related entities (if provided, will replace existing)
+  genres?: string[];
+  directors?: string[];
+  producers?: string[];
+  studios?: Studio[];
+  cast?: CastMember[];
+  collection_name?: string;
+}
+
+/**
+ * Response after creating a movie
+ */
+export interface MovieCreateResponse {
+  success: boolean;
+  movie_id: number;
+  message: string;
+}
+
+/**
+ * Response for bulk import
+ */
+export interface BulkImportResponse {
+  success: boolean;
+  total_processed: number;
+  successful: number;
+  failed: number;
+  results: Array<{
+    title: string;
+    success: boolean;
+    movie_id?: number;
+    error?: string;
+  }>;
 }
