@@ -254,7 +254,7 @@ export const getMoviesByActor = async (req: Request, res: Response) => {
  *              - maxRevenue: maximum revenue threshold (optional)
  * @param res - Express response object
  */
-export const getMoviesByFinancials = async (req: Request, res: Response) => {
+export const getMoviesByFinancial = async (req: Request, res: Response) => {
   const {
     minBudget,
     maxBudget,

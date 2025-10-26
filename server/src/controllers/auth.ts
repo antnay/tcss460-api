@@ -163,5 +163,12 @@ export const register = async (req: Request, res: Response) => {
     res.status(200).json(out);
 };
 
+export const keyForm = async (req: Request, res: Response) => {
+};
+
+export const generateKey = async (req: Request, res: Response) => {
+};
+
+
 // export const verify = async (req: Request, res: Response) => {
 // };
