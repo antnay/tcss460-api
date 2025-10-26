@@ -6,7 +6,6 @@ import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import path from 'path'; import { initializeDatabase, closeDatabase } from '@db';
 import router from './routes';
-import { errorHandler } from '@middleware/errorHandler';
 
 dotenvx.config({ path: '../.env' });
 
