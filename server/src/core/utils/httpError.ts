@@ -1,6 +1,6 @@
 export interface ErrorResponse {
   statusCode: number;
-  message: string;
+  message: object | string;
   timestamp: string;
 }
 
@@ -8,7 +8,7 @@ export class ApiError {
   /**
    * Create a standardized error response
    */
-  static createResponse(statusCode: number, message: string): ErrorResponse {
+  static createResponse(statusCode: number, message: object | string): ErrorResponse {
     return {
       statusCode,
       message,
@@ -20,7 +20,6 @@ export class ApiError {
    * Create an internal server error response and log it
    */
   static internalError(error: unknown): ErrorResponse {
-    // Log the actual error for debugging
     console.error('[Internal Server Error]', {
       timestamp: new Date().toISOString(),
       error: error instanceof Error ? error.message : error,
@@ -30,8 +29,7 @@ export class ApiError {
     return this.createResponse(500, 'internal server error');
   }
 
-  // Optional: Add common error helpers
-  static badRequest(message: string = 'Bad request'): ErrorResponse {
+  static badRequest(message: object | string = 'Bad request'): ErrorResponse {
     return this.createResponse(400, message);
   }
 
@@ -41,6 +39,10 @@ export class ApiError {
 
   static forbidden(message: string = 'Forbidden'): ErrorResponse {
     return this.createResponse(403, message);
+  }
+
+  static conflict(message: string = 'Conflict'): ErrorResponse {
+    return this.createResponse(400, message);
   }
 
   static notFound(message: string = 'Not found'): ErrorResponse {

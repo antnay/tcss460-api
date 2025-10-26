@@ -18,6 +18,10 @@ const startServer = async () => {
     app.use(cors());
     app.use(express.json({ limit: '10mb' }));
     app.use(express.urlencoded({ extended: true }));
+    app.use((req, res, next) => {
+      console.log(`${req.method} ${req.url}`);
+      next();
+    });
 
     // Routes
     app.use('/api', router);
@@ -26,11 +30,6 @@ const startServer = async () => {
     // API Documentation - Swagger UI
     const swaggerDocument = YAML.load(path.join(__dirname, '../api-docs/swagger.yaml'));
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-
-    app.use((req, res, next) => {
-      console.log(`${req.method} ${req.url} - ${JSON.stringify(req.headers)}`);
-      next();
-    });
 
     const PORT = process.env.SERVER_PORT || 4000;
     const server = app.listen(PORT, () => {
