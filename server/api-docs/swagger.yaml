@@ -1,15 +1,17 @@
 openapi: 3.0.3
 info:
   title: TCSS 460 Movie API
-  description: RESTful API for movies with authentication
   version: 1.0.0
+  description: RESTful API for movies with comprehensive movie information including directors and genres
   contact:
     name: API Support
+  license:
+    name: MIT
 
 servers:
   - url: http://localhost:3000
-    description: Local development server
-  - url: https://api.example.com
+    description: Development server
+  - url: https://tcss460-api.onrender.com
     description: Production server
 
 tags:
