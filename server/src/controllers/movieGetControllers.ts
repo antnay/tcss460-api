@@ -6,6 +6,70 @@ import { HttpStatus } from '@utils/httpStatus';
 import { Request, Response } from 'express';
 
 /**
+ * Get all movies that belong to a specific collection/franchise
+ * Returns movies in chronological order within the collection
+ * 
+ * @param req - Express request object with collection name in query params
+ * @param res - Express response object
+ */
+export const getMoviesByCollection = async (req: Request, res: Response) => {
+  const collectionName = req.query.name;
+
+  if (!collectionName || typeof collectionName !== 'string') {
+    return res.status(HttpStatus.BAD_REQUEST).json(
+      ApiError.badRequest("Collection name is required")
+    );
+  }
+
+  const sql = `
+    SELECT 
+      m.title,
+      m.original_title,
+      STRING_AGG(DISTINCT d.director_name, ', ') as directors,
+      STRING_AGG(DISTINCT g.genre_name, ', ') as genres,
+      STRING_AGG(DISTINCT s.studio_name, ', ') as studios,
+      m.release_date,
+      m.runtime_minutes,
+      m.overview,
+      m.budget::int8,
+      m.revenue::int8,
+      m.mpa_rating,
+      m.poster_url,
+      m.backdrop_url,
+      c.collection_name,
+      (m.revenue - m.budget)::int8 as profit
+    FROM movies m
+    INNER JOIN collections c ON m.collection_id = c.collection_id
+    LEFT JOIN movie_directors md ON m.movie_id = md.movie_id
+    LEFT JOIN directors d ON md.director_id = d.director_id
+    LEFT JOIN movie_genres mg ON m.movie_id = mg.movie_id
+    LEFT JOIN genres g ON mg.genre_id = g.genre_id
+    LEFT JOIN movie_studios ms ON m.movie_id = ms.movie_id
+    LEFT JOIN studios s ON ms.studio_id = s.studio_id
+    WHERE LOWER(c.collection_name) LIKE LOWER($1)
+    GROUP BY 
+      m.movie_id, m.title, m.original_title, m.release_date,
+      m.runtime_minutes, m.overview, m.budget, m.revenue,
+      m.mpa_rating, m.poster_url, m.backdrop_url, c.collection_name
+    ORDER BY m.release_date ASC
+  `;
+
+  try {
+    const result = await pool.query(sql, [`%${collectionName}%`]);
+    
+    if (result.rowCount === 0) {
+      return res.status(HttpStatus.NOT_FOUND).json(
+        ApiError.notFound('No movies found in the specified collection')
+      );
+    }
+
+    res.status(200).json(result.rows);
+  } catch (error) {
+    return res.status(500).json(ApiError.internalError(error));
+  }
+};
+
+/**
  * Fetch all movies, optionally filtering by release year.
  * 
  * @param req - Express request object.
