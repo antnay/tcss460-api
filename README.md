@@ -33,5 +33,23 @@
 
 ## Comments
 - Anthony Naydyuk: 
-- Regan Lai: 
+- Regan Lai:
+
+# Beta 2 Sprint 
+- 10/25 8:00PM - 9:00PM
+
+## API URL
+- [api docs](https://tcss460-api.onrender.com/api-docs)
+
+## Contribution and Members
+- Anthony Naydyuk: some endpoints
+- Regan Lai: some endpoints
+- Boyd Bouck: some endpoints
+- Hussein Sheikh: some endpoints
+
+## Meeting Location and What Was Done 
+- Discord
+- Group contributing together completing the required task of the sprint
+
+## Comments
 
