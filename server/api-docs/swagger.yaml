@@ -157,7 +157,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/movies/search/financial:
+  /api/movies/financial:
     get:
       tags:
         - Movies
@@ -225,7 +225,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/movies/search/multi:
+  /api/movies/multi:
     get:
       tags:
         - Movies
@@ -323,7 +323,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/movies/studio/search:
+  /api/movies/studio:
     get:
       tags:
         - Movies
@@ -366,7 +366,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/movies/director/search:
+  /api/movies/director:
     get:
       tags:
         - Movies
@@ -409,7 +409,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/movies/actor/search:
+  /api/movies/actor:
     get:
       tags:
         - Movies
@@ -452,7 +452,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/movies/collection/search:
+  /api/movies/collection:
     get:
       tags:
         - Movies

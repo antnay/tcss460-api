@@ -13,12 +13,12 @@ router.post('/login', c.login)
 router.post('/register', c.register)
 router.get('/api-key', c.keyForm)
 router.post('/api-key', c.generateKey)
-router.get('/movies/search/financial', c.getMoviesByFinancial);
-router.get('/movies/search/multi', c.getMoviesByMultiFilter);
-router.get('/movies/studio/search', c.getMoviesByStudio);
-router.get('/movies/director/search', c.getMoviesByDirector);
-router.get('/movies/actor/search', c.getMoviesByActor);
-router.get('/movies/collection/search', c.getMoviesByCollection);
+router.get('/movies/financial', c.getMoviesByFinancial);
+router.get('/movies/multi', c.getMoviesByMultiFilter);
+router.get('/movies/studio', c.getMoviesByStudio);
+router.get('/movies/director', c.getMoviesByDirector);
+router.get('/movies/actor', c.getMoviesByActor);
+router.get('/movies/collection', c.getMoviesByCollection);
 router.get('/movies/:id', c.getMovieById);
 
 // POST routes - Add movies
