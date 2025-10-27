@@ -246,38 +246,99 @@ paths:
     get:
       tags:
         - Movies
-      summary: Get all movies
-      description: Retrieve a list of all movies, optionally filtered by release year
+      summary: Get all movies with pagination
+      description: |
+        Retrieve a paginated list of movies with optional year filtering.
+        Returns movies sorted alphabetically by title with aggregated directors and genres.
+        Executes parallel queries for movie data and total count for optimal performance.
       operationId: getAllMovies
       parameters:
         - name: year
           in: query
-          description: Filter movies by release year
+          description: Filter movies by release year (exact match)
           required: false
           schema:
             type: integer
             minimum: 1900
             maximum: 2100
           example: 2023
+        - name: page
+          in: query
+          description: Page number (starts from 1)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          example: 1
+        - name: limit
+          in: query
+          description: Number of results per page (1-100)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          example: 20
       responses:
         '200':
-          description: List of movies retrieved successfully
+          description: Paginated list of movies retrieved successfully
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Movie'
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Movie'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationMetadata'
+              examples:
+                paginatedResponse:
+                  value:
+                    data:
+                      - title: "Oppenheimer"
+                        original_title: "Oppenheimer"
+                        directors: "Christopher Nolan"
+                        genres: "Biography, Drama, History"
+                        release_date: "2023-07-21"
+                        runtime_minutes: 180
+                        overview: "The story of American scientist J. Robert Oppenheimer..."
+                        budget: 100000000
+                        revenue: 952000000
+                        mpa_rating: "R"
+                        poster_url: "https://image.tmdb.org/t/p/w500/..."
+                        backdrop_url: "https://image.tmdb.org/t/p/original/..."
+                    pagination:
+                      currentPage: 1
+                      pageSize: 20
+                      totalItems: 150
+                      totalPages: 8
+                      hasNextPage: true
+                      hasPreviousPage: false
         '400':
-          description: Bad request - invalid year parameter
+          description: Bad request - invalid query parameters
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                statusCode: 400
-                message: year must be a number
-                timestamp: "2025-10-25T12:00:00.000Z"
+              examples:
+                invalidYear:
+                  value:
+                    statusCode: 400
+                    message:
+                      - code: invalid_type
+                        message: Expected number, received string
+                    timestamp: "2025-10-25T12:00:00.000Z"
+                invalidLimit:
+                  value:
+                    statusCode: 400
+                    message:
+                      - code: too_big
+                        message: Number must be less than or equal to 100
+                    timestamp: "2025-10-25T12:00:00.000Z"
         '500':
           description: Internal server error
           content:
@@ -333,6 +394,110 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+    
+    delete:
+      tags:
+        - Movies
+      summary: Delete movie by ID
+      description: |
+        Permanently delete a movie and all associated relationships (directors, genres, studios) 
+        via CASCADE deletion. The operation is wrapped in a database transaction for atomicity.
+        Includes comprehensive audit logging.
+      operationId: deleteMovieById
+      parameters:
+        - name: id
+          in: path
+          description: Movie ID to delete (must be a positive integer)
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 123
+      responses:
+        '200':
+          description: Movie deleted successfully with audit information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Movie "The Shawshank Redemption" has been permanently deleted
+                  deleted_movie:
+                    type: object
+                    properties:
+                      movie_id:
+                        type: integer
+                        example: 123
+                      title:
+                        type: string
+                        example: The Shawshank Redemption
+                      original_title:
+                        type: string
+                        example: The Shawshank Redemption
+                      release_date:
+                        type: string
+                        format: date
+                        example: "1994-09-23"
+                      directors:
+                        type: string
+                        example: Frank Darabont
+                      genres:
+                        type: string
+                        example: Drama, Crime
+                      studios:
+                        type: string
+                        example: Castle Rock Entertainment
+                      deleted_at:
+                        type: string
+                        format: date-time
+                        example: "2025-10-26T10:30:00.000Z"
+                  warning:
+                    type: string
+                    example: This action cannot be undone
+        '400':
+          description: Bad request - invalid or missing ID parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidId:
+                  value:
+                    statusCode: 400
+                    message: id must be a valid positive number
+                    timestamp: "2025-10-25T12:00:00.000Z"
+                missingId:
+                  value:
+                    statusCode: 400
+                    message: id parameter is required
+                    timestamp: "2025-10-25T12:00:00.000Z"
+        '404':
+          description: Movie not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                statusCode: 404
+                message: Movie with id 123 not found
+                timestamp: "2025-10-25T12:00:00.000Z"
+        '500':
+          description: Internal server error - deletion failed (transaction rolled back)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                statusCode: 500
+                message: Failed to delete movie
+                timestamp: "2025-10-25T12:00:00.000Z"
+      security:
+        - BearerAuth: []
 
 components:
   schemas:
@@ -401,6 +566,40 @@ components:
           description: URL to movie backdrop image
           example: https://image.tmdb.org/t/p/w500/backdrop.jpg
           nullable: true
+
+    PaginationMetadata:
+      type: object
+      description: Pagination metadata for navigating through results
+      properties:
+        currentPage:
+          type: integer
+          description: Current page number
+          example: 1
+          minimum: 1
+        pageSize:
+          type: integer
+          description: Number of items per page
+          example: 20
+          minimum: 1
+          maximum: 100
+        totalItems:
+          type: integer
+          description: Total number of items across all pages
+          example: 150
+          minimum: 0
+        totalPages:
+          type: integer
+          description: Total number of pages
+          example: 8
+          minimum: 0
+        hasNextPage:
+          type: boolean
+          description: Whether there is a next page available
+          example: true
+        hasPreviousPage:
+          type: boolean
+          description: Whether there is a previous page available
+          example: false
 
     JwtResponse:
       type: object
