@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: TCSS 460 Movie API
   version: 1.0.0
-  description: RESTful API for movies with comprehensive movie information including directors and genres
+  description: RESTful API for movies with comprehensive movie information including directors and genres. https://github.com/antnay/tcss460-api
   contact:
     name: API Support
   license:
