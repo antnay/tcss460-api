@@ -1,10 +1,11 @@
+// server/src/controllers/movieGetControllers.ts
 
-import { Movie } from '@models/movieModel';
+import { Request, Response } from 'express';
 import pool from '@utils/database';
 import { ApiError } from '@utils/httpError';
 import { HttpStatus } from '@utils/httpStatus';
-import { Request, Response } from 'express';
 import z from 'zod';
+import { Movie } from '@models';
 
 /**
  * Zod schema for validating pagination and filter query parameters.
@@ -18,6 +19,278 @@ const getAllMoviesSchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20)
 });
+
+/**
+ * Search movies by title (paginated)
+ * Case-insensitive substring match on movie title.
+ *
+ * Query params:
+ *   - title: string (min length 2)
+ *   - page?: number = 1
+ *   - limit?: number = 20 (max 100)
+ */
+export const searchMoviesByTitle = async (req: Request, res: Response) => {
+  const title = String(req.query.title || '').trim();
+  if (title.length < 2) {
+    return res.status(HttpStatus.BAD_REQUEST).json(
+      ApiError.badRequest("Query 'title' (min 2 chars) is required")
+    );
+  }
+
+  const page = Math.max(1, parseInt(String(req.query.page || '1'), 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit || '20'), 10) || 20));
+  const offset = (page - 1) * limit;
+
+  const countSql = `SELECT COUNT(*)::int AS total FROM movies WHERE title ILIKE '%' || $1 || '%'`;
+  const dataSql = `
+    SELECT 
+      m.movie_id, m.title, m.original_title,
+      STRING_AGG(DISTINCT d.director_name, ', ') AS directors,
+      STRING_AGG(DISTINCT g.genre_name, ', ')    AS genres,
+      m.release_date, m.runtime_minutes, m.overview,
+      m.budget::int8, m.revenue::int8, m.mpa_rating,
+      m.poster_url, m.backdrop_url
+    FROM movies m
+    LEFT JOIN movie_directors md ON m.movie_id = md.movie_id
+    LEFT JOIN directors d       ON md.director_id = d.director_id
+    LEFT JOIN movie_genres mg   ON m.movie_id = mg.movie_id
+    LEFT JOIN genres g          ON mg.genre_id  = g.genre_id
+    WHERE m.title ILIKE '%' || $1 || '%'
+    GROUP BY m.movie_id, m.title, m.original_title, m.release_date, 
+             m.runtime_minutes, m.overview, m.budget, m.revenue, 
+             m.mpa_rating, m.poster_url, m.backdrop_url
+    ORDER BY m.release_date DESC
+    LIMIT $2 OFFSET $3
+  `;
+
+  try {
+    const [countR, dataR] = await Promise.all([
+      pool.query<{ total: number; }>(countSql, [title]),
+      pool.query<Movie>(dataSql, [title, limit, offset]),
+    ]);
+    const total = countR.rows[0].total;
+    if (total === 0) {
+      return res.status(HttpStatus.NOT_FOUND).json(
+        ApiError.notFound('No movies found matching the search term')
+      );
+    }
+    const pages = Math.max(1, Math.ceil(total / limit));
+    return res.status(200).json({
+      data: dataR.rows,
+      meta: { page, limit, total, pages, query: { title } },
+    });
+  } catch (err) {
+    return res.status(500).json(ApiError.internalError(err));
+  }
+};
+
+/**
+ * Filter movies by release date range (paginated)
+ * Inclusive BETWEEN filter on release_date.
+ *
+ * Query params:
+ *   - start: YYYY-MM-DD
+ *   - end:   YYYY-MM-DD
+ *   - page?: number = 1
+ *   - limit?: number = 20 (max 100)
+ */
+export const filterByRelease = async (req: Request, res: Response) => {
+  const start = String(req.query.start || '').trim();
+  const end = String(req.query.end || '').trim();
+  const iso = /^\d{4}-\d{2}-\d{2}$/;
+
+  if (!start || !end || !iso.test(start) || !iso.test(end) || new Date(start) > new Date(end)) {
+    return res.status(HttpStatus.BAD_REQUEST).json(
+      ApiError.badRequest("Provide valid 'start' and 'end' (YYYY-MM-DD) with start <= end")
+    );
+  }
+
+  const page = Math.max(1, parseInt(String(req.query.page || '1'), 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit || '20'), 10) || 20));
+  const offset = (page - 1) * limit;
+
+  const countSql = `
+    SELECT COUNT(*)::int AS total
+    FROM movies m
+    WHERE m.release_date BETWEEN $1 AND $2
+  `;
+  const dataSql = `
+    SELECT 
+      m.movie_id, m.title, m.original_title,
+      STRING_AGG(DISTINCT d.director_name, ', ') AS directors,
+      STRING_AGG(DISTINCT g.genre_name, ', ')    AS genres,
+      m.release_date, m.runtime_minutes, m.overview,
+      m.budget::int8, m.revenue::int8, m.mpa_rating,
+      m.poster_url, m.backdrop_url
+    FROM movies m
+    LEFT JOIN movie_directors md ON m.movie_id = md.movie_id
+    LEFT JOIN directors d       ON md.director_id = d.director_id
+    LEFT JOIN movie_genres mg   ON m.movie_id = mg.movie_id
+    LEFT JOIN genres g          ON mg.genre_id  = g.genre_id
+    WHERE m.release_date BETWEEN $1 AND $2
+    GROUP BY m.movie_id, m.title, m.original_title, m.release_date, 
+             m.runtime_minutes, m.overview, m.budget, m.revenue, 
+             m.mpa_rating, m.poster_url, m.backdrop_url
+    ORDER BY m.release_date ASC
+    LIMIT $3 OFFSET $4
+  `;
+
+  try {
+    const [countR, dataR] = await Promise.all([
+      pool.query<{ total: number; }>(countSql, [start, end]),
+      pool.query<Movie>(dataSql, [start, end, limit, offset]),
+    ]);
+    const total = countR.rows[0].total;
+    if (total === 0) {
+      return res.status(HttpStatus.NOT_FOUND).json(
+        ApiError.notFound('No movies found in the specified date range')
+      );
+    }
+    const pages = Math.max(1, Math.ceil(total / limit));
+    return res.status(200).json({
+      data: dataR.rows,
+      meta: { page, limit, total, pages, query: { start, end } },
+    });
+  } catch (err) {
+    return res.status(500).json(ApiError.internalError(err));
+  }
+};
+
+/**
+ * Filter movies by genre (paginated)
+ * Exact, case-insensitive match on genre_name.
+ *
+ * Query params:
+ *   - genre: string
+ *   - page?: number = 1
+ *   - limit?: number = 20 (max 100)
+ */
+export const filterByGenre = async (req: Request, res: Response) => {
+  const genre = String(req.query.genre || '').trim();
+  if (!genre) {
+    return res.status(HttpStatus.BAD_REQUEST).json(
+      ApiError.badRequest("Query 'genre' is required")
+    );
+  }
+
+  const page = Math.max(1, parseInt(String(req.query.page || '1'), 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit || '20'), 10) || 20));
+  const offset = (page - 1) * limit;
+
+  const countSql = `
+    SELECT COUNT(DISTINCT m.movie_id)::int AS total
+    FROM movies m
+    JOIN movie_genres mg ON m.movie_id = mg.movie_id
+    JOIN genres g       ON mg.genre_id = g.genre_id
+    WHERE LOWER(g.genre_name) = LOWER($1)
+  `;
+  const dataSql = `
+    SELECT 
+      m.movie_id, m.title, m.original_title,
+      STRING_AGG(DISTINCT d.director_name, ', ') AS directors,
+      STRING_AGG(DISTINCT g2.genre_name, ', ')   AS genres,
+      m.release_date, m.runtime_minutes, m.overview,
+      m.budget::int8, m.revenue::int8, m.mpa_rating,
+      m.poster_url, m.backdrop_url
+    FROM movies m
+    JOIN movie_genres mg ON m.movie_id = mg.movie_id
+    JOIN genres g        ON mg.genre_id = g.genre_id
+    LEFT JOIN movie_directors md ON m.movie_id = md.movie_id
+    LEFT JOIN directors d       ON md.director_id = d.director_id
+    LEFT JOIN movie_genres mg2  ON m.movie_id = mg2.movie_id
+    LEFT JOIN genres g2         ON mg2.genre_id  = g2.genre_id
+    WHERE LOWER(g.genre_name) = LOWER($1)
+    GROUP BY m.movie_id, m.title, m.original_title, m.release_date, 
+             m.runtime_minutes, m.overview, m.budget, m.revenue, 
+             m.mpa_rating, m.poster_url, m.backdrop_url
+    ORDER BY m.release_date DESC
+    LIMIT $2 OFFSET $3
+  `;
+
+  try {
+    const [countR, dataR] = await Promise.all([
+      pool.query<{ total: number; }>(countSql, [genre]),
+      pool.query<Movie>(dataSql, [genre, limit, offset]),
+    ]);
+    const total = countR.rows[0].total;
+    if (total === 0) {
+      return res.status(HttpStatus.NOT_FOUND).json(
+        ApiError.notFound(`No movies found with genre: ${genre}`)
+      );
+    }
+    const pages = Math.max(1, Math.ceil(total / limit));
+    return res.status(200).json({
+      data: dataR.rows,
+      meta: { page, limit, total, pages, query: { genre } },
+    });
+  } catch (err) {
+    return res.status(500).json(ApiError.internalError(err));
+  }
+};
+
+/**
+ * Filter movies by MPA rating (paginated)
+ * Only allows PG, PG-13, or R.
+ *
+ * Query params:
+ *   - rating: 'PG' | 'PG-13' | 'R'
+ *   - page?: number = 1
+ *   - limit?: number = 20 (max 100)
+ */
+export const filterByRating = async (req: Request, res: Response) => {
+  const rating = String(req.query.rating || '').trim().toUpperCase();
+  if (!['PG', 'PG-13', 'R'].includes(rating)) {
+    return res.status(HttpStatus.BAD_REQUEST).json(
+      ApiError.badRequest("Query 'rating' must be one of: PG, PG-13, R")
+    );
+  }
+
+  const page = Math.max(1, parseInt(String(req.query.page || '1'), 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit || '20'), 10) || 20));
+  const offset = (page - 1) * limit;
+
+  const countSql = `SELECT COUNT(*)::int AS total FROM movies WHERE mpa_rating = $1`;
+  const dataSql = `
+    SELECT 
+      m.movie_id, m.title, m.original_title,
+      STRING_AGG(DISTINCT d.director_name, ', ') AS directors,
+      STRING_AGG(DISTINCT g.genre_name, ', ')    AS genres,
+      m.release_date, m.runtime_minutes, m.overview,
+      m.budget::int8, m.revenue::int8, m.mpa_rating,
+      m.poster_url, m.backdrop_url
+    FROM movies m
+    LEFT JOIN movie_directors md ON m.movie_id = md.movie_id
+    LEFT JOIN directors d       ON md.director_id = d.director_id
+    LEFT JOIN movie_genres mg   ON m.movie_id = mg.movie_id
+    LEFT JOIN genres g          ON mg.genre_id  = g.genre_id
+    WHERE m.mpa_rating = $1
+    GROUP BY m.movie_id, m.title, m.original_title, m.release_date, 
+             m.runtime_minutes, m.overview, m.budget, m.revenue, 
+             m.mpa_rating, m.poster_url, m.backdrop_url
+    ORDER BY m.release_date DESC
+    LIMIT $2 OFFSET $3
+  `;
+
+  try {
+    const [countR, dataR] = await Promise.all([
+      pool.query<{ total: number; }>(countSql, [rating]),
+      pool.query<Movie>(dataSql, [rating, limit, offset]),
+    ]);
+    const total = countR.rows[0].total;
+    if (total === 0) {
+      return res.status(HttpStatus.NOT_FOUND).json(
+        ApiError.notFound(`No movies found with rating: ${rating}`)
+      );
+    }
+    const pages = Math.max(1, Math.ceil(total / limit));
+    return res.status(200).json({
+      data: dataR.rows,
+      meta: { page, limit, total, pages, query: { rating } },
+    });
+  } catch (err) {
+    return res.status(500).json(ApiError.internalError(err));
+  }
+};
 
 /**
  * Get all movies that belong to a specific collection/franchise
@@ -198,7 +471,7 @@ export const getAllMovies = async (req: Request, res: Response) => {
   // Add WHERE clause if year filter is provided
   const params: number[] = [];
   const countParams: number[] = [];
-  
+
   if (year) {
     const whereClause = ' WHERE EXTRACT(YEAR FROM m.release_date) = $1';
     sql += whereClause;
@@ -215,14 +488,14 @@ export const getAllMovies = async (req: Request, res: Response) => {
     ORDER BY m.title
     LIMIT $${params.length + 1} OFFSET $${params.length + 2}
   `;
-  
+
   params.push(limit, offset);
 
   try {
     // Execute both queries in parallel for better performance
     const [moviesResult, countResult] = await Promise.all([
       pool.query<Movie>(sql, params),
-      pool.query<{ total: string }>(countSql, countParams)
+      pool.query<{ total: string; }>(countSql, countParams)
     ]);
 
     const movies: Movie[] = moviesResult.rows;
@@ -656,8 +929,8 @@ export const getMoviesByMultiFilter = async (req: Request, res: Response) => {
         params.push(date);
         paramCounter++;
       }
-    } catch (error) {
-      // Invalid date format, ignore this filter
+    } catch {
+      // ignore
     }
   }
 
@@ -669,8 +942,8 @@ export const getMoviesByMultiFilter = async (req: Request, res: Response) => {
         params.push(date);
         paramCounter++;
       }
-    } catch (error) {
-      // Invalid date format, ignore this filter
+    } catch {
+      // ignore
     }
   }
 
