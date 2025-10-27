@@ -23,7 +23,7 @@ tags:
     description: Movie data operations
 
 paths:
-  /api-info:
+  /api/api-info:
     get:
       tags:
         - System
@@ -51,7 +51,7 @@ paths:
                     type: string
                     example: /api-docs
 
-  /health:
+  /api/health:
     get:
       tags:
         - System
@@ -80,7 +80,7 @@ paths:
                     type: string
                     example: Database connection failed
 
-  /login:
+  /api/login:
     post:
       tags:
         - Authentication
@@ -157,7 +157,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /register:
+  /api/register:
     post:
       tags:
         - Authentication
@@ -242,7 +242,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /movies:
+  /api/movies:
     get:
       tags:
         - Movies
@@ -346,7 +346,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /movies/{id}:
+  /api/movies/{id}:
     get:
       tags:
         - Movies
