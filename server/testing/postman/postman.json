@@ -502,6 +502,303 @@
 			"name": "Movies",
 			"item": [
 				{
+					"name": "Search Movies by Financial Criteria",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/movies/financial?minBudget=100000000&maxRevenue=1000000000",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "movies", "financial"],
+							"query": [
+								{
+									"key": "minBudget",
+									"value": "100000000",
+									"description": "Minimum budget threshold"
+								},
+								{
+									"key": "maxRevenue",
+									"value": "1000000000",
+									"description": "Maximum revenue threshold"
+								}
+							]
+						},
+						"description": "Filter movies by financial criteria (budget and revenue thresholds)"
+					},
+					"response": [
+						{
+							"name": "Success - Movies Found",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/movies/financial?minBudget=100000000&maxRevenue=1000000000"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n    {\n        \"title\": \"Oppenheimer\",\n        \"original_title\": \"Oppenheimer\",\n        \"directors\": \"Christopher Nolan\",\n        \"genres\": \"Biography, Drama, History\",\n        \"studios\": \"Universal Pictures\",\n        \"release_date\": \"2023-07-21\",\n        \"runtime_minutes\": 180,\n        \"budget\": 100000000,\n        \"revenue\": 950000000,\n        \"profit\": 850000000,\n        \"mpa_rating\": \"R\"\n    }\n]"
+						},
+						{
+							"name": "No Movies Found",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/movies/financial?minBudget=1000000000"
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"statusCode\": 404,\n    \"message\": \"No movies found matching the specified financial criteria\",\n    \"timestamp\": \"2025-10-26T12:00:00.000Z\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Advanced Multi-Filter Search",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/movies/multi?genre=Action&mpaRating=PG-13&minBudget=100000000&startDate=2025-06-01&endDate=2025-08-31",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "movies", "multi"],
+							"query": [
+								{
+									"key": "genre",
+									"value": "Action",
+									"description": "Genre name (partial match)"
+								},
+								{
+									"key": "mpaRating",
+									"value": "PG-13",
+									"description": "MPA rating (exact match)"
+								},
+								{
+									"key": "minBudget",
+									"value": "100000000",
+									"description": "Minimum budget threshold"
+								},
+								{
+									"key": "startDate",
+									"value": "2025-06-01",
+									"description": "Release date range start"
+								},
+								{
+									"key": "endDate",
+									"value": "2025-08-31",
+									"description": "Release date range end"
+								}
+							]
+						},
+						"description": "Search movies using multiple criteria (genre, actor, studio, rating, budget, dates)"
+					},
+					"response": [
+						{
+							"name": "Success - Movies Found",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/movies/multi?genre=Action&mpaRating=PG-13&minBudget=100000000&startDate=2025-06-01&endDate=2025-08-31"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n    {\n        \"title\": \"Mission: Impossible - Dead Reckoning Part Two\",\n        \"directors\": \"Christopher McQuarrie\",\n        \"genres\": \"Action, Thriller\",\n        \"studios\": \"Paramount Pictures, Skydance Media\",\n        \"release_date\": \"2025-06-28\",\n        \"budget\": 200000000,\n        \"revenue\": 0,\n        \"mpa_rating\": \"PG-13\",\n        \"cast_members\": [\n            {\n                \"actor_name\": \"Tom Cruise\",\n                \"character_name\": \"Ethan Hunt\",\n                \"profile_url\": \"https://image.tmdb.org/t/p/w500/...\"\n            }\n        ]\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": "Search Movies by Studio",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/movies/studio?name=Marvel Studios",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "movies", "studio"],
+							"query": [
+								{
+									"key": "name",
+									"value": "Marvel Studios",
+									"description": "Studio name (partial match)"
+								}
+							]
+						},
+						"description": "Find movies produced by a specific studio, including co-productions"
+					},
+					"response": [
+						{
+							"name": "Success - Movies Found",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/movies/studio?name=Marvel Studios"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n    {\n        \"title\": \"Captain America: Brave New World\",\n        \"directors\": \"Julius Onah\",\n        \"genres\": \"Action, Adventure, Science Fiction\",\n        \"studios\": \"Marvel Studios, Walt Disney Pictures\",\n        \"release_date\": \"2025-07-26\",\n        \"mpa_rating\": \"PG-13\"\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": "Search Movies by Director",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/movies/director?name=Christopher Nolan",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "movies", "director"],
+							"query": [
+								{
+									"key": "name",
+									"value": "Christopher Nolan",
+									"description": "Director name (partial match)"
+								}
+							]
+						},
+						"description": "Find movies directed by a specific filmmaker, including co-directed films"
+					},
+					"response": [
+						{
+							"name": "Success - Movies Found",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/movies/director?name=Christopher Nolan"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n    {\n        \"title\": \"Oppenheimer\",\n        \"directors\": \"Christopher Nolan\",\n        \"genres\": \"Biography, Drama, History\",\n        \"studios\": \"Universal Pictures, Syncopy\",\n        \"release_date\": \"2023-07-21\",\n        \"mpa_rating\": \"R\"\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": "Search Movies by Actor",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/movies/actor?name=Tom Cruise",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "movies", "actor"],
+							"query": [
+								{
+									"key": "name",
+									"value": "Tom Cruise",
+									"description": "Actor name (partial match)"
+								}
+							]
+						},
+						"description": "Find movies featuring a specific actor, including character details"
+					},
+					"response": [
+						{
+							"name": "Success - Movies Found",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/movies/actor?name=Tom Cruise"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n    {\n        \"title\": \"Mission: Impossible - Dead Reckoning Part One\",\n        \"directors\": \"Christopher McQuarrie\",\n        \"genres\": \"Action, Thriller\",\n        \"studios\": \"Paramount Pictures, Skydance Media\",\n        \"release_date\": \"2023-07-12\",\n        \"mpa_rating\": \"PG-13\",\n        \"actor_character\": \"Ethan Hunt\",\n        \"actor_profile_url\": \"https://image.tmdb.org/t/p/w500/...\"\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": "Search Movies by Collection",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/movies/collection?name=Mission: Impossible",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "movies", "collection"],
+							"query": [
+								{
+									"key": "name",
+									"value": "Mission: Impossible",
+									"description": "Collection/franchise name (partial match)"
+								}
+							]
+						},
+						"description": "Find all movies in a specific franchise or collection, ordered chronologically"
+					},
+					"response": [
+						{
+							"name": "Success - Movies Found",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/movies/collection?name=Mission: Impossible"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n    {\n        \"title\": \"Mission: Impossible\",\n        \"directors\": \"Brian De Palma\",\n        \"genres\": \"Action, Thriller\",\n        \"studios\": \"Paramount Pictures\",\n        \"release_date\": \"1996-05-22\",\n        \"collection_name\": \"Mission: Impossible Collection\",\n        \"mpa_rating\": \"PG-13\"\n    },\n    {\n        \"title\": \"Mission: Impossible - Dead Reckoning Part One\",\n        \"directors\": \"Christopher McQuarrie\",\n        \"genres\": \"Action, Thriller\",\n        \"studios\": \"Paramount Pictures, Skydance Media\",\n        \"release_date\": \"2023-07-12\",\n        \"collection_name\": \"Mission: Impossible Collection\",\n        \"mpa_rating\": \"PG-13\"\n    }\n]"
+						}
+					]
+				},
+				{
 					"name": "Get All Movies",
 					"request": {
 						"method": "GET",
