@@ -1,41 +1,64 @@
 import { Router } from 'express';
 import * as c from '../controllers/index';
+import { validateGenerateApiKey } from '@middleware/apiKeyVerification';
+import { requireApiKey } from '@middleware/apiKeyAuth';
 
-export const router = Router();
+export const publicRouter = Router();
+export const protectedRouter = Router();
+protectedRouter.use(requireApiKey);
 
 // System routes
-router.get('/api-info', c.info);
-router.get('/health', c.healthCheck);
+publicRouter.get('/api-info', c.info);
+publicRouter.get('/health', c.healthCheck);
 
-router.post('/login', c.login)
-router.post('/register', c.register)
-router.get('/api-key', c.keyForm)
-router.post('/api-key', c.generateKey)
+// router.post('/login', c.login)
+// router.post('/register', c.register)
+publicRouter.get('/api-key', c.serveApiKeyForm);
+publicRouter.get('/api-key/info', c.getApiKeyInfo);
+
+publicRouter.post('/api-key', validateGenerateApiKey, c.generateApiKeyController);
 
 // GET
-router.get('/movies', c.getAllMovies);
-router.get('/movies/:id', c.getMovieById);
-router.get('/studios/:id/movies', c.getMoviesByStudioId);
-router.get('/studios/name/:name/movies', c.getMoviesByStudio);
-router.get('/directors/:id/movies', c.getMoviesByDirectorId);
-router.get('/directors/name/:name/movies', c.getMoviesByDirector);
-router.get('/actors/:id/movies', c.getMoviesByActorId);
-router.get('/actors/name/:name/movies', c.getMoviesByActor);
-router.get('/collections/:id/movies', c.getMoviesByCollectionId);
-router.get('/collections/name/:name/movies', c.getMoviesByCollection);
+protectedRouter.get('/movies', c.getAllMovies);
+protectedRouter.get('/movies/:id', c.getMovieById);
+protectedRouter.get('/studios/:id/movies', c.getMoviesByStudioId);
+protectedRouter.get('/studios/name/:name/movies', c.getMoviesByStudio);
+protectedRouter.get('/directors/:id/movies', c.getMoviesByDirectorId);
+protectedRouter.get('/directors/name/:name/movies', c.getMoviesByDirector);
+protectedRouter.get('/actors/:id/movies', c.getMoviesByActorId);
+protectedRouter.get('/actors/name/:name/movies', c.getMoviesByActor);
+protectedRouter.get('/collections/:id/movies', c.getMoviesByCollectionId);
+protectedRouter.get('/collections/name/:name/movies', c.getMoviesByCollection);
 
 // POST routes - Add movies
-router.post('/movies', c.addMovie);
-router.post('/movies/bulk', c.addMoviesBulk);
+protectedRouter.post('/movies', c.addMovie);
+protectedRouter.post('/movies/bulk', c.addMoviesBulk);
 
 // PUT routes - Complete update
-router.put('/movies/:id', c.updateMovie);
+protectedRouter.put('/movies/:id', c.updateMovie);
 
 // PATCH routes - Partial updates
-router.patch('/movies/:id', c.patchMovie);
-router.patch('/movies/:id/cast', c.updateCast);
+protectedRouter.patch('/movies/:id', c.patchMovie);
+protectedRouter.patch('/movies/:id/cast', c.updateCast);
 
 // DELETE routes - Delete movie
-router.delete('/movies/:id', c.deleteMovieById);
+protectedRouter.delete('/movies/:id', c.deleteMovieById);
 
-export default router;
+// other get stuff
+protectedRouter.get('/actors', c.getAllActors)
+protectedRouter.get('/actors/:id', c.getActorById)
+protectedRouter.get('/actors/search', c.searchActors)
+
+protectedRouter.get('/collections', c.getAllCollections)
+protectedRouter.get('/collections/:id', c.getCollectionById)
+protectedRouter.get('/collections/search', c.searchCollections)
+
+protectedRouter.get('/directors', c.getAllDirectors)
+protectedRouter.get('/directors/:id', c.getDirectorById)
+protectedRouter.get('/directories/search', c.searchDirectors)
+
+protectedRouter.get('/studios', c.getAllStudios)
+protectedRouter.get('/studios/:id', c.getStudioById)
+protectedRouter.get('/studios/search', c.searchStudios)
+
+export default publicRouter;

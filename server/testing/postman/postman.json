@@ -1,8 +1,8 @@
 {
 	"info": {
-		"_postman_id": "6c70a975-dec8-41eb-8e63-d2801c1b7201",
+		"_postman_id": "1c355971-f912-47d3-9081-d3d40569d8c5",
 		"name": "Movie Database API",
-		"description": "Complete API testing suite with automated tests for all endpoints including validation, error handling, and data integrity checks",
+		"description": "Complete API testing suite with API key authentication. Generate an API key first, then use it to access protected endpoints.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "46264729"
 	},
@@ -17,17 +17,14 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"// Test 1: Status code is 200",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
-									"// Test 2: Response is JSON",
 									"pm.test(\"Response is JSON\", function () {",
 									"    pm.response.to.be.json;",
 									"});",
 									"",
-									"// Test 3: Response has required fields",
 									"pm.test(\"Response contains API info fields\", function () {",
 									"    const jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('name');",
@@ -35,12 +32,10 @@
 									"    pm.expect(jsonData).to.have.property('description');",
 									"});",
 									"",
-									"// Test 4: Response time is acceptable",
 									"pm.test(\"Response time is less than 500ms\", function () {",
 									"    pm.expect(pm.response.responseTime).to.be.below(500);",
 									"});",
 									"",
-									"// Test 5: Content-Type is application/json",
 									"pm.test(\"Content-Type is application/json\", function () {",
 									"    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
 									"});"
@@ -50,6 +45,9 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "noauth"
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
@@ -71,23 +69,19 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"// Test 1: Status code is 200",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
-									"// Test 2: Response contains status message",
 									"pm.test(\"Response contains health status\", function () {",
 									"    const jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('message');",
 									"});",
 									"",
-									"// Test 3: Response time is fast",
 									"pm.test(\"Health check responds quickly (< 200ms)\", function () {",
 									"    pm.expect(pm.response.responseTime).to.be.below(200);",
 									"});",
 									"",
-									"// Test 4: Response is JSON",
 									"pm.test(\"Response is JSON\", function () {",
 									"    pm.response.to.be.json;",
 									"});"
@@ -97,6 +91,9 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "noauth"
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
@@ -114,64 +111,119 @@
 			]
 		},
 		{
-			"name": "Authentication",
+			"name": "API Key Management",
 			"item": [
 				{
-					"name": "Register",
+					"name": "Get API Key Form (HTML)",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"// Test 1: Check if registration was successful (200) or user exists (409)",
-									"pm.test(\"Status code is 200 (success) or 409 (user exists)\", function () {",
-									"    pm.expect([200, 409]).to.include(pm.response.code);",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
 									"});",
 									"",
-									"// If successful registration",
-									"if (pm.response.code === 200) {",
-									"    const jsonData = pm.response.json();",
-									"    ",
-									"    // Test 2: Response contains username",
-									"    pm.test(\"Response contains username\", function () {",
-									"        pm.expect(jsonData).to.have.property('username');",
-									"        pm.expect(jsonData.username).to.be.a('string');",
-									"    });",
-									"    ",
-									"    // Test 3: Response contains role",
-									"    pm.test(\"Response contains role\", function () {",
-									"        pm.expect(jsonData).to.have.property('role');",
-									"        pm.expect(['user', 'admin']).to.include(jsonData.role);",
-									"    });",
-									"    ",
-									"    // Test 4: Response contains JWT",
-									"    pm.test(\"Response contains JWT token\", function () {",
-									"        pm.expect(jsonData).to.have.property('jwt');",
-									"        pm.expect(jsonData.jwt).to.have.property('accessToken');",
-									"        pm.expect(jsonData.jwt).to.have.property('type');",
-									"        pm.expect(jsonData.jwt.type).to.equal('Bearer');",
-									"    });",
-									"    ",
-									"    // Test 5: JWT token is not empty",
-									"    pm.test(\"JWT access token is not empty\", function () {",
-									"        pm.expect(jsonData.jwt.accessToken).to.not.be.empty;",
-									"    });",
-									"    ",
-									"    // Save access token for future requests",
-									"    pm.collectionVariables.set('accessToken', jsonData.jwt.accessToken);",
-									"    console.log('Access token saved:', jsonData.jwt.accessToken.substring(0, 20) + '...');",
+									"pm.test(\"Content-Type is HTML\", function () {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.include('text/html');",
+									"});",
+									"",
+									"pm.test(\"Response contains HTML form\", function () {",
+									"    pm.expect(pm.response.text()).to.include('<form');",
+									"    pm.expect(pm.response.text()).to.include('Generate API Key');",
+									"});",
+									"",
+									"pm.test(\"Form has name input field\", function () {",
+									"    pm.expect(pm.response.text()).to.include('name=\"name\"');",
+									"});",
+									"",
+									"pm.test(\"Form has email input field\", function () {",
+									"    pm.expect(pm.response.text()).to.include('name=\"email\"');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api-key",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api-key"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generate API Key",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"const jsonData = pm.response.json();",
+									"",
+									"pm.test(\"Response indicates success\", function () {",
+									"    pm.expect(jsonData).to.have.property('success');",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});",
+									"",
+									"pm.test(\"Response contains API key\", function () {",
+									"    pm.expect(jsonData).to.have.property('api_key');",
+									"    pm.expect(jsonData.api_key).to.be.a('string');",
+									"    pm.expect(jsonData.api_key.length).to.be.at.least(32);",
+									"});",
+									"",
+									"pm.test(\"Response contains name\", function () {",
+									"    pm.expect(jsonData).to.have.property('name');",
+									"    pm.expect(jsonData.name).to.equal('Test Application');",
+									"});",
+									"",
+									"pm.test(\"Response contains email\", function () {",
+									"    pm.expect(jsonData).to.have.property('email');",
+									"});",
+									"",
+									"pm.test(\"Response contains rate_limit\", function () {",
+									"    pm.expect(jsonData).to.have.property('rate_limit');",
+									"    pm.expect(jsonData.rate_limit).to.be.a('number');",
+									"    pm.expect(jsonData.rate_limit).to.be.at.least(1);",
+									"});",
+									"",
+									"pm.test(\"Response contains created_at timestamp\", function () {",
+									"    pm.expect(jsonData).to.have.property('created_at');",
+									"    pm.expect(new Date(jsonData.created_at)).to.be.a('date');",
+									"});",
+									"",
+									"pm.test(\"Response contains success message\", function () {",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData.message).to.include('success');",
+									"});",
+									"",
+									"pm.test(\"Response contains important notice\", function () {",
+									"    pm.expect(jsonData).to.have.property('important_notice');",
+									"    pm.expect(jsonData.important_notice).to.include('SAVE');",
+									"});",
+									"",
+									"// Save the API key for use in other requests",
+									"if (jsonData.api_key) {",
+									"    pm.collectionVariables.set('apiKey', jsonData.api_key);",
+									"    console.log('✅ API Key saved:', jsonData.api_key.substring(0, 20) + '...');",
 									"}",
 									"",
-									"// If user already exists",
-									"if (pm.response.code === 409) {",
-									"    pm.test(\"Conflict response contains error message\", function () {",
-									"        const jsonData = pm.response.json();",
-									"        pm.expect(jsonData).to.have.property('message');",
-									"    });",
-									"}",
-									"",
-									"// Test 6: Response time is reasonable",
-									"pm.test(\"Response time is less than 2000ms\", function () {",
+									"pm.test(\"Response time is reasonable (< 2000ms)\", function () {",
 									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
 									"});"
 								],
@@ -192,68 +244,162 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"user\"\n}"
+							"raw": "{\n  \"name\": \"Test Application\",\n  \"email\": \"test@example.com\"\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/register",
+							"raw": "{{baseUrl}}/api-key",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"register"
+								"api-key"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Login",
+					"name": "Generate API Key - Missing Name",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"// Test 1: Status code is 200",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"const jsonData = pm.response.json();",
+									"",
+									"pm.test(\"Response contains error message\", function () {",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"});",
+									"",
+									"pm.test(\"Response indicates validation error\", function () {",
+									"    pm.expect(jsonData.message.toLowerCase()).to.include('required');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"test@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api-key",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api-key"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generate API Key - Invalid Email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"const jsonData = pm.response.json();",
+									"",
+									"pm.test(\"Response contains validation error\", function () {",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData.message.toLowerCase()).to.include('email');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test Application\",\n  \"email\": \"invalid-email\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api-key",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api-key"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get API Key Info",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
 									"const jsonData = pm.response.json();",
 									"",
-									"// Test 2: Response contains username",
-									"pm.test(\"Response contains username\", function () {",
-									"    pm.expect(jsonData).to.have.property('username');",
-									"    pm.expect(jsonData.username).to.be.a('string');",
+									"pm.test(\"Response indicates success\", function () {",
+									"    pm.expect(jsonData).to.have.property('success');",
+									"    pm.expect(jsonData.success).to.be.true;",
 									"});",
 									"",
-									"// Test 3: Response contains role",
-									"pm.test(\"Response contains role\", function () {",
-									"    pm.expect(jsonData).to.have.property('role');",
-									"    pm.expect(['user', 'admin']).to.include(jsonData.role);",
+									"pm.test(\"Response contains api_key_info object\", function () {",
+									"    pm.expect(jsonData).to.have.property('api_key_info');",
+									"    pm.expect(jsonData.api_key_info).to.be.an('object');",
 									"});",
 									"",
-									"// Test 4: Response contains JWT",
-									"pm.test(\"Response contains JWT token\", function () {",
-									"    pm.expect(jsonData).to.have.property('jwt');",
-									"    pm.expect(jsonData.jwt).to.have.property('accessToken');",
-									"    pm.expect(jsonData.jwt).to.have.property('type');",
-									"    pm.expect(jsonData.jwt.type).to.equal('Bearer');",
+									"pm.test(\"API key info contains required fields\", function () {",
+									"    const info = jsonData.api_key_info;",
+									"    pm.expect(info).to.have.property('name');",
+									"    pm.expect(info).to.have.property('rate_limit');",
+									"    pm.expect(info).to.have.property('created_at');",
 									"});",
 									"",
-									"// Test 5: JWT token is valid format",
-									"pm.test(\"JWT access token has valid format\", function () {",
-									"    const token = jsonData.jwt.accessToken;",
-									"    pm.expect(token).to.not.be.empty;",
-									"    pm.expect(token.split('.')).to.have.lengthOf(3); // JWT has 3 parts",
+									"pm.test(\"Name matches generated key\", function () {",
+									"    pm.expect(jsonData.api_key_info.name).to.equal('Test Application');",
 									"});",
 									"",
-									"// Save access token",
-									"pm.collectionVariables.set('accessToken', jsonData.jwt.accessToken);",
-									"console.log('Login successful - Access token saved');",
+									"pm.test(\"Rate limit is a positive number\", function () {",
+									"    pm.expect(jsonData.api_key_info.rate_limit).to.be.a('number');",
+									"    pm.expect(jsonData.api_key_info.rate_limit).to.be.above(0);",
+									"});",
 									"",
-									"// Test 6: Response time",
-									"pm.test(\"Response time is less than 1500ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(1500);",
+									"pm.test(\"Created timestamp is valid\", function () {",
+									"    pm.expect(new Date(jsonData.api_key_info.created_at)).to.be.a('date');",
 									"});"
 								],
 								"type": "text/javascript"
@@ -261,54 +407,43 @@
 						}
 					],
 					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
+						"method": "GET",
 						"header": [
 							{
-								"key": "Content-Type",
-								"value": "application/json"
+								"key": "X-API-Key",
+								"value": "{{apiKey}}",
+								"type": "text"
 							}
 						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
-						},
 						"url": {
-							"raw": "{{baseUrl}}/login",
+							"raw": "{{baseUrl}}/api-key/info",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"login"
+								"api-key",
+								"info"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Login - Invalid Credentials",
+					"name": "Get API Key Info - No Key",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"// Test 1: Status code is 400 or 401",
-									"pm.test(\"Status code is 400 or 401 for invalid credentials\", function () {",
-									"    pm.expect([400, 401]).to.include(pm.response.code);",
+									"pm.test(\"Status code is 401 Unauthorized\", function () {",
+									"    pm.response.to.have.status(401);",
 									"});",
 									"",
-									"// Test 2: Response contains error message",
+									"const jsonData = pm.response.json();",
+									"",
 									"pm.test(\"Response contains error message\", function () {",
-									"    const jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('message');",
-									"});",
-									"",
-									"// Test 3: No token is returned",
-									"pm.test(\"No JWT token in response\", function () {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData).to.not.have.property('jwt');",
+									"    pm.expect(jsonData.message).to.include('required');",
 									"});"
 								],
 								"type": "text/javascript"
@@ -316,27 +451,60 @@
 						}
 					],
 					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"wrongpassword\"\n}"
-						},
+						"method": "GET",
+						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/login",
+							"raw": "{{baseUrl}}/api-key/info",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"login"
+								"api-key",
+								"info"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get API Key Info - Invalid Key",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401 Unauthorized\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"const jsonData = pm.response.json();",
+									"",
+									"pm.test(\"Response indicates invalid key\", function () {",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData.message.toLowerCase()).to.include('invalid');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "invalid-key-12345",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api-key/info",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api-key",
+								"info"
 							]
 						}
 					},
@@ -354,20 +522,17 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"// Test 1: Status code is 200",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
 									"const jsonData = pm.response.json();",
 									"",
-									"// Test 2: Response has data array",
 									"pm.test(\"Response contains data array\", function () {",
 									"    pm.expect(jsonData).to.have.property('data');",
 									"    pm.expect(jsonData.data).to.be.an('array');",
 									"});",
 									"",
-									"// Test 3: Response has meta object with pagination",
 									"pm.test(\"Response contains pagination meta\", function () {",
 									"    pm.expect(jsonData).to.have.property('meta');",
 									"    pm.expect(jsonData.meta).to.have.property('page');",
@@ -378,7 +543,6 @@
 									"    pm.expect(jsonData.meta).to.have.property('hasPreviousPage');",
 									"});",
 									"",
-									"// Test 4: Data types are correct",
 									"pm.test(\"Pagination meta has correct data types\", function () {",
 									"    pm.expect(jsonData.meta.page).to.be.a('number');",
 									"    pm.expect(jsonData.meta.limit).to.be.a('number');",
@@ -388,7 +552,6 @@
 									"    pm.expect(jsonData.meta.hasPreviousPage).to.be.a('boolean');",
 									"});",
 									"",
-									"// Test 5: If movies exist, verify structure",
 									"if (jsonData.data.length > 0) {",
 									"    const movie = jsonData.data[0];",
 									"    ",
@@ -398,15 +561,67 @@
 									"        pm.expect(movie).to.have.property('runtime_minutes');",
 									"    });",
 									"    ",
-									"    // Save a movie ID for later tests",
 									"    if (movie.movie_id) {",
 									"        pm.collectionVariables.set('testMovieId', movie.movie_id.toString());",
 									"    }",
 									"}",
 									"",
-									"// Test 6: Response time",
 									"pm.test(\"Response time is less than 2000ms\", function () {",
 									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/movies?page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"movies"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Movies - No API Key",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401 Unauthorized\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Response contains error about missing API key\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData.message.toLowerCase()).to.include('api key');",
 									"});"
 								],
 								"type": "text/javascript"
@@ -445,20 +660,17 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"// Test 1: Status code is 200",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
 									"const jsonData = pm.response.json();",
 									"",
-									"// Test 2: Response is a single movie object",
 									"pm.test(\"Response is a movie object\", function () {",
 									"    pm.expect(jsonData).to.be.an('object');",
 									"    pm.expect(jsonData).to.not.be.an('array');",
 									"});",
 									"",
-									"// Test 3: Movie has required fields",
 									"pm.test(\"Movie has required fields\", function () {",
 									"    pm.expect(jsonData).to.have.property('title');",
 									"    pm.expect(jsonData).to.have.property('original_title');",
@@ -467,70 +679,44 @@
 									"    pm.expect(jsonData).to.have.property('overview');",
 									"});",
 									"",
-									"// Test 4: Data types are correct",
 									"pm.test(\"Movie fields have correct data types\", function () {",
 									"    pm.expect(jsonData.title).to.be.a('string');",
 									"    pm.expect(jsonData.runtime_minutes).to.be.a('number');",
 									"});",
 									"",
-									"// Test 5: Response time",
 									"pm.test(\"Response time is less than 1000ms\", function () {",
 									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
 									"});"
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
 					"request": {
 						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/movies/{{testMovieId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"movies",
-								"{{testMovieId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Movie by ID - Not Found",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Test 1: Status code is 404",
-									"pm.test(\"Status code is 404 for non-existent movie\", function () {",
-									"    pm.response.to.have.status(404);",
-									"});",
-									"",
-									"// Test 2: Response contains error message",
-									"pm.test(\"Response contains error message\", function () {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData).to.have.property('message');",
-									"});"
-								],
-								"type": "text/javascript"
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}",
+								"type": "text"
 							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [],
+						],
 						"url": {
-							"raw": "{{baseUrl}}/movies/999999",
+							"raw": "{{baseUrl}}/movies/:id",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"movies",
-								"999999"
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "5"
+								}
 							]
 						}
 					},
@@ -543,7 +729,6 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"// Test 1: Status code is 200 or 404",
 									"pm.test(\"Status code is 200 or 404\", function () {",
 									"    pm.expect([200, 404]).to.include(pm.response.code);",
 									"});",
@@ -551,38 +736,34 @@
 									"if (pm.response.code === 200) {",
 									"    const jsonData = pm.response.json();",
 									"    ",
-									"    // Test 2: Response has correct structure",
 									"    pm.test(\"Response has data and meta\", function () {",
 									"        pm.expect(jsonData).to.have.property('data');",
 									"        pm.expect(jsonData).to.have.property('meta');",
 									"    });",
 									"    ",
-									"    // Test 3: Meta contains search query",
 									"    pm.test(\"Meta contains the search query\", function () {",
 									"        pm.expect(jsonData.meta).to.have.property('query');",
 									"        pm.expect(jsonData.meta.query).to.have.property('title');",
 									"    });",
-									"    ",
-									"    // Test 4: All returned movies contain search term",
-									"    if (jsonData.data.length > 0) {",
-									"        pm.test(\"Returned movies match search term\", function () {",
-									"            const searchTerm = 'batman';",
-									"            jsonData.data.forEach(movie => {",
-									"                pm.expect(movie.title.toLowerCase()).to.include(searchTerm);",
-									"            });",
-									"        });",
-									"    }",
 									"}"
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}",
+								"type": "text"
+							}
+						],
 						"url": {
-							"raw": "{{baseUrl}}/movies?title=batman&page=1&limit=20",
+							"raw": "{{baseUrl}}/movies?title=batman",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -593,117 +774,6 @@
 								{
 									"key": "title",
 									"value": "batman"
-								},
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "limit",
-									"value": "20"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Filter by Year",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Test 1: Status code is 200 or 404",
-									"pm.test(\"Status code is 200 or 404\", function () {",
-									"    pm.expect([200, 404]).to.include(pm.response.code);",
-									"});",
-									"",
-									"if (pm.response.code === 200) {",
-									"    const jsonData = pm.response.json();",
-									"    ",
-									"    // Test 2: Meta contains year filter",
-									"    pm.test(\"Meta contains year filter\", function () {",
-									"        pm.expect(jsonData.meta.query).to.have.property('year');",
-									"        pm.expect(jsonData.meta.query.year).to.equal(2020);",
-									"    });",
-									"    ",
-									"    // Test 3: All movies are from specified year",
-									"    if (jsonData.data.length > 0) {",
-									"        pm.test(\"All movies are from year 2020\", function () {",
-									"            jsonData.data.forEach(movie => {",
-									"                const movieYear = new Date(movie.release_date).getFullYear();",
-									"                pm.expect(movieYear).to.equal(2020);",
-									"            });",
-									"        });",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/movies?year=2020",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"movies"
-							],
-							"query": [
-								{
-									"key": "year",
-									"value": "2020"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Filter by Genre",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Test 1: Status code is 200 or 404",
-									"pm.test(\"Status code is 200 or 404\", function () {",
-									"    pm.expect([200, 404]).to.include(pm.response.code);",
-									"});",
-									"",
-									"if (pm.response.code === 200) {",
-									"    const jsonData = pm.response.json();",
-									"    ",
-									"    // Test 2: Meta contains genre filter",
-									"    pm.test(\"Meta contains genre filter\", function () {",
-									"        pm.expect(jsonData.meta.query).to.have.property('genre');",
-									"    });",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/movies?genre=Action",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"movies"
-							],
-							"query": [
-								{
-									"key": "genre",
-									"value": "Action"
 								}
 							]
 						}
@@ -741,7 +811,9 @@
 									"    }",
 									"}"
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -760,133 +832,6 @@
 								{
 									"key": "rating",
 									"value": "PG-13"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Filter by Date Range",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Test 1: Status code is 200 or 404",
-									"pm.test(\"Status code is 200 or 404\", function () {",
-									"    pm.expect([200, 404]).to.include(pm.response.code);",
-									"});",
-									"",
-									"if (pm.response.code === 200) {",
-									"    const jsonData = pm.response.json();",
-									"    ",
-									"    // Test 2: Meta contains date filters",
-									"    pm.test(\"Meta contains date range filters\", function () {",
-									"        pm.expect(jsonData.meta.query).to.have.property('startDate');",
-									"        pm.expect(jsonData.meta.query).to.have.property('endDate');",
-									"    });",
-									"    ",
-									"    // Test 3: All movies fall within date range",
-									"    if (jsonData.data.length > 0) {",
-									"        pm.test(\"All movies are within date range\", function () {",
-									"            const startDate = new Date('2020-01-01');",
-									"            const endDate = new Date('2020-12-31');",
-									"            ",
-									"            jsonData.data.forEach(movie => {",
-									"                const movieDate = new Date(movie.release_date);",
-									"                pm.expect(movieDate).to.be.at.least(startDate);",
-									"                pm.expect(movieDate).to.be.at.most(endDate);",
-									"            });",
-									"        });",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/movies?startDate=2020-01-01&endDate=2020-12-31",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"movies"
-							],
-							"query": [
-								{
-									"key": "startDate",
-									"value": "2020-01-01"
-								},
-								{
-									"key": "endDate",
-									"value": "2020-12-31"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Filter by Financial",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Test 1: Status code is 200 or 404",
-									"pm.test(\"Status code is 200 or 404\", function () {",
-									"    pm.expect([200, 404]).to.include(pm.response.code);",
-									"});",
-									"",
-									"if (pm.response.code === 200) {",
-									"    const jsonData = pm.response.json();",
-									"    ",
-									"    // Test 2: Meta contains financial filters",
-									"    pm.test(\"Meta contains financial filters\", function () {",
-									"        pm.expect(jsonData.meta.query).to.have.property('minBudget');",
-									"    });",
-									"    ",
-									"    // Test 3: All movies meet budget criteria",
-									"    if (jsonData.data.length > 0) {",
-									"        pm.test(\"All movies meet minimum budget\", function () {",
-									"            const minBudget = 1000000;",
-									"            jsonData.data.forEach(movie => {",
-									"                if (movie.budget) {",
-									"                    pm.expect(parseInt(movie.budget)).to.be.at.least(minBudget);",
-									"                }",
-									"            });",
-									"        });",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/movies?minBudget=1000000&maxBudget=50000000",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"movies"
-							],
-							"query": [
-								{
-									"key": "minBudget",
-									"value": "1000000"
-								},
-								{
-									"key": "maxBudget",
-									"value": "50000000"
 								}
 							]
 						}
@@ -927,7 +872,9 @@
 									"    }",
 									"}"
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -963,386 +910,6 @@
 			]
 		},
 		{
-			"name": "Studios",
-			"item": [
-				{
-					"name": "Get Movies by Studio ID",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Test 1: Status code is 200 or 404",
-									"pm.test(\"Status code is 200 or 404\", function () {",
-									"    pm.expect([200, 404]).to.include(pm.response.code);",
-									"});",
-									"",
-									"if (pm.response.code === 200) {",
-									"    const jsonData = pm.response.json();",
-									"    ",
-									"    // Test 2: Has pagination structure",
-									"    pm.test(\"Response has correct structure\", function () {",
-									"        pm.expect(jsonData).to.have.property('data');",
-									"        pm.expect(jsonData).to.have.property('meta');",
-									"    });",
-									"    ",
-									"    // Test 3: Meta contains studio filter",
-									"    pm.test(\"Meta contains studioId\", function () {",
-									"        pm.expect(jsonData.meta).to.have.property('query');",
-									"        pm.expect(jsonData.meta.query).to.have.property('studioId');",
-									"    });",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/studios/{{testStudioId}}/movies?page=1&limit=20",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"studios",
-								"{{testStudioId}}",
-								"movies"
-							],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "limit",
-									"value": "20"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Movies by Studio Name",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Test 1: Status code is 200 or 404",
-									"pm.test(\"Status code is 200 or 404\", function () {",
-									"    pm.expect([200, 404]).to.include(pm.response.code);",
-									"});",
-									"",
-									"if (pm.response.code === 200) {",
-									"    const jsonData = pm.response.json();",
-									"    ",
-									"    // Test 2: Has correct structure",
-									"    pm.test(\"Response has data and meta\", function () {",
-									"        pm.expect(jsonData).to.have.property('data');",
-									"        pm.expect(jsonData).to.have.property('meta');",
-									"    });",
-									"    ",
-									"    // Test 3: Meta contains studio name",
-									"    pm.test(\"Meta contains studio name\", function () {",
-									"        pm.expect(jsonData.meta.query).to.have.property('studio');",
-									"    });",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/studios/name/Warner Bros/movies",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"studios",
-								"name",
-								"Warner Bros",
-								"movies"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Directors",
-			"item": [
-				{
-					"name": "Get Movies by Director ID",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Test 1: Status code is 200 or 404",
-									"pm.test(\"Status code is 200 or 404\", function () {",
-									"    pm.expect([200, 404]).to.include(pm.response.code);",
-									"});",
-									"",
-									"if (pm.response.code === 200) {",
-									"    const jsonData = pm.response.json();",
-									"    ",
-									"    pm.test(\"Response has correct structure\", function () {",
-									"        pm.expect(jsonData).to.have.property('data');",
-									"        pm.expect(jsonData).to.have.property('meta');",
-									"    });",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/directors/{{testDirectorId}}/movies",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"directors",
-								"{{testDirectorId}}",
-								"movies"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Movies by Director Name",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Test 1: Status code is 200 or 404",
-									"pm.test(\"Status code is 200 or 404\", function () {",
-									"    pm.expect([200, 404]).to.include(pm.response.code);",
-									"});",
-									"",
-									"if (pm.response.code === 200) {",
-									"    const jsonData = pm.response.json();",
-									"    ",
-									"    pm.test(\"Meta contains director name\", function () {",
-									"        pm.expect(jsonData.meta.query).to.have.property('director');",
-									"    });",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/directors/name/Christopher Nolan/movies",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"directors",
-								"name",
-								"Christopher Nolan",
-								"movies"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Actors",
-			"item": [
-				{
-					"name": "Get Movies by Actor ID",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Test 1: Status code is 200 or 404",
-									"pm.test(\"Status code is 200 or 404\", function () {",
-									"    pm.expect([200, 404]).to.include(pm.response.code);",
-									"});",
-									"",
-									"if (pm.response.code === 200) {",
-									"    const jsonData = pm.response.json();",
-									"    ",
-									"    pm.test(\"Response has correct structure\", function () {",
-									"        pm.expect(jsonData).to.have.property('data');",
-									"        pm.expect(jsonData).to.have.property('meta');",
-									"    });",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/actors/{{testActorId}}/movies",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"actors",
-								"{{testActorId}}",
-								"movies"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Movies by Actor Name",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Test 1: Status code is 200 or 404",
-									"pm.test(\"Status code is 200 or 404\", function () {",
-									"    pm.expect([200, 404]).to.include(pm.response.code);",
-									"});",
-									"",
-									"if (pm.response.code === 200) {",
-									"    const jsonData = pm.response.json();",
-									"    ",
-									"    pm.test(\"Meta contains actor name\", function () {",
-									"        pm.expect(jsonData.meta.query).to.have.property('actor');",
-									"    });",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/actors/name/Tom Hanks/movies",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"actors",
-								"name",
-								"Tom Hanks",
-								"movies"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Collections",
-			"item": [
-				{
-					"name": "Get Movies by Collection ID",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Test 1: Status code is 200 or 404",
-									"pm.test(\"Status code is 200 or 404\", function () {",
-									"    pm.expect([200, 404]).to.include(pm.response.code);",
-									"});",
-									"",
-									"if (pm.response.code === 200) {",
-									"    const jsonData = pm.response.json();",
-									"    ",
-									"    pm.test(\"Response has correct structure\", function () {",
-									"        pm.expect(jsonData).to.have.property('data');",
-									"        pm.expect(jsonData).to.have.property('meta');",
-									"    });",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/collections/{{testCollectionId}}/movies",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"collections",
-								"{{testCollectionId}}",
-								"movies"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Movies by Collection Name",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Test 1: Status code is 200 or 404",
-									"pm.test(\"Status code is 200 or 404\", function () {",
-									"    pm.expect([200, 404]).to.include(pm.response.code);",
-									"});",
-									"",
-									"if (pm.response.code === 200) {",
-									"    const jsonData = pm.response.json();",
-									"    ",
-									"    pm.test(\"Meta contains collection name\", function () {",
-									"        pm.expect(jsonData.meta.query).to.have.property('collection');",
-									"    });",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/collections/name/Marvel Cinematic Universe/movies",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"collections",
-								"name",
-								"Marvel Cinematic Universe",
-								"movies"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
 			"name": "Movies - POST",
 			"item": [
 				{
@@ -1352,43 +919,39 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"// Test 1: Status code is 201",
 									"pm.test(\"Status code is 201 Created\", function () {",
 									"    pm.response.to.have.status(201);",
 									"});",
 									"",
 									"const jsonData = pm.response.json();",
 									"",
-									"// Test 2: Response has success flag",
 									"pm.test(\"Response indicates success\", function () {",
 									"    pm.expect(jsonData).to.have.property('success');",
 									"    pm.expect(jsonData.success).to.be.true;",
 									"});",
 									"",
-									"// Test 3: Response contains movie_id",
 									"pm.test(\"Response contains new movie ID\", function () {",
 									"    pm.expect(jsonData).to.have.property('movie_id');",
 									"    pm.expect(jsonData.movie_id).to.be.a('number');",
 									"});",
 									"",
-									"// Test 4: Response contains success message",
 									"pm.test(\"Response contains success message\", function () {",
 									"    pm.expect(jsonData).to.have.property('message');",
 									"    pm.expect(jsonData.message).to.be.a('string');",
 									"});",
 									"",
-									"// Save the movie ID for future tests",
 									"if (jsonData.movie_id) {",
 									"    pm.collectionVariables.set('testMovieId', jsonData.movie_id.toString());",
 									"    console.log('New movie ID saved:', jsonData.movie_id);",
 									"}",
 									"",
-									"// Test 5: Response time",
 									"pm.test(\"Response time is reasonable (< 3000ms)\", function () {",
 									"    pm.expect(pm.response.responseTime).to.be.below(3000);",
 									"});"
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -1398,6 +961,11 @@
 							{
 								"key": "Content-Type",
 								"value": "application/json"
+							},
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -1411,187 +979,6 @@
 							],
 							"path": [
 								"movies"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Add Movie - Missing Required Fields",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Test 1: Status code is 400 or 500",
-									"pm.test(\"Status code is 400 or 500 for invalid input\", function () {",
-									"    pm.expect([400, 500]).to.include(pm.response.code);",
-									"});",
-									"",
-									"// Test 2: Response indicates failure",
-									"pm.test(\"Response indicates error\", function () {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData).to.have.property('success');",
-									"    pm.expect(jsonData.success).to.be.false;",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"title\": \"Incomplete Movie\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/movies",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"movies"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Bulk Import Movies",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Test 1: Status code is 201 or 207",
-									"pm.test(\"Status code is 201 (all success) or 207 (partial success)\", function () {",
-									"    pm.expect([201, 207]).to.include(pm.response.code);",
-									"});",
-									"",
-									"const jsonData = pm.response.json();",
-									"",
-									"// Test 2: Response has required fields",
-									"pm.test(\"Response has bulk import fields\", function () {",
-									"    pm.expect(jsonData).to.have.property('success');",
-									"    pm.expect(jsonData).to.have.property('total_processed');",
-									"    pm.expect(jsonData).to.have.property('successful');",
-									"    pm.expect(jsonData).to.have.property('failed');",
-									"    pm.expect(jsonData).to.have.property('results');",
-									"});",
-									"",
-									"// Test 3: Results array has correct length",
-									"pm.test(\"Results array matches total_processed\", function () {",
-									"    pm.expect(jsonData.results.length).to.equal(jsonData.total_processed);",
-									"});",
-									"",
-									"// Test 4: Sum of successful and failed equals total",
-									"pm.test(\"Successful + Failed = Total Processed\", function () {",
-									"    pm.expect(jsonData.successful + jsonData.failed).to.equal(jsonData.total_processed);",
-									"});",
-									"",
-									"// Test 5: Each result has required fields",
-									"pm.test(\"Each result has title and success status\", function () {",
-									"    jsonData.results.forEach(result => {",
-									"        pm.expect(result).to.have.property('title');",
-									"        pm.expect(result).to.have.property('success');",
-									"    });",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"movies\": [\n    {\n      \"title\": \"Bulk Test Movie 1\",\n      \"original_title\": \"Bulk Test Movie 1\",\n      \"release_date\": \"2024-06-01\",\n      \"runtime_minutes\": 110,\n      \"overview\": \"First test movie in bulk import.\",\n      \"budget\": 5000000,\n      \"revenue\": 15000000,\n      \"mpa_rating\": \"PG\",\n      \"genres\": [\"Comedy\"],\n      \"directors\": [\"Bulk Director 1\"]\n    },\n    {\n      \"title\": \"Bulk Test Movie 2\",\n      \"original_title\": \"Bulk Test Movie 2\",\n      \"release_date\": \"2024-07-01\",\n      \"runtime_minutes\": 95,\n      \"overview\": \"Second test movie in bulk import.\",\n      \"budget\": 3000000,\n      \"revenue\": 8000000,\n      \"mpa_rating\": \"PG-13\",\n      \"genres\": [\"Drama\"],\n      \"directors\": [\"Bulk Director 2\"]\n    }\n  ]\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/movies/bulk",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"movies",
-								"bulk"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Movies - PUT",
-			"item": [
-				{
-					"name": "Update Movie (Complete)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Test 1: Status code is 200",
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"const jsonData = pm.response.json();",
-									"",
-									"// Test 2: Response indicates success",
-									"pm.test(\"Response indicates success\", function () {",
-									"    pm.expect(jsonData).to.have.property('success');",
-									"    pm.expect(jsonData.success).to.be.true;",
-									"});",
-									"",
-									"// Test 3: Response contains movie_id",
-									"pm.test(\"Response contains movie_id\", function () {",
-									"    pm.expect(jsonData).to.have.property('movie_id');",
-									"});",
-									"",
-									"// Test 4: Response contains message",
-									"pm.test(\"Response contains success message\", function () {",
-									"    pm.expect(jsonData).to.have.property('message');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"title\": \"Updated Test Movie\",\n  \"original_title\": \"Updated Test Movie\",\n  \"release_date\": \"2024-01-15\",\n  \"runtime_minutes\": 125,\n  \"overview\": \"This movie has been updated via PUT request.\",\n  \"budget\": 12000000,\n  \"revenue\": 30000000,\n  \"mpa_rating\": \"R\",\n  \"genres\": [\"Action\", \"Drama\"],\n  \"directors\": [\"Updated Director\"],\n  \"studios\": [\n    {\n      \"studio_name\": \"Updated Studio\",\n      \"country\": \"United States\"\n    }\n  ]\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/movies/{{testMovieId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"movies",
-								"{{testMovieId}}"
 							]
 						}
 					},
@@ -1632,7 +1019,9 @@
 									"    pm.expect(jsonData).to.have.property('message');",
 									"});"
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -1649,13 +1038,19 @@
 							"raw": "{\n  \"revenue\": 35000000,\n  \"overview\": \"Partially updated overview via PATCH request.\"\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/movies/{{testMovieId}}",
+							"raw": "{{baseUrl}}/movies/:id",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"movies",
-								"{{testMovieId}}"
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
 							]
 						}
 					},
@@ -1692,7 +1087,9 @@
 									"    pm.expect(jsonData.cast_count).to.be.at.most(10);",
 									"});"
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -1709,14 +1106,20 @@
 							"raw": "{\n  \"cast\": [\n    {\n      \"actor_name\": \"Updated Actor 1\",\n      \"character_name\": \"Hero\",\n      \"actor_order\": 1\n    },\n    {\n      \"actor_name\": \"Updated Actor 2\",\n      \"character_name\": \"Villain\",\n      \"actor_order\": 2\n    },\n    {\n      \"actor_name\": \"Updated Actor 3\",\n      \"character_name\": \"Sidekick\",\n      \"actor_order\": 3\n    }\n  ]\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/movies/{{testMovieId}}/cast",
+							"raw": "{{baseUrl}}/movies/:id/cast",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"movies",
-								"{{testMovieId}}",
+								":id",
 								"cast"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
 							]
 						}
 					},
@@ -1725,10 +1128,10 @@
 			]
 		},
 		{
-			"name": "Movies - DELETE",
+			"name": "Movies - PUT",
 			"item": [
 				{
-					"name": "Delete Movie by ID",
+					"name": "Update Movie (Complete)",
 					"event": [
 						{
 							"listen": "test",
@@ -1747,7 +1150,76 @@
 									"    pm.expect(jsonData.success).to.be.true;",
 									"});",
 									"",
-									"// Test 3: Response contains deleted movie info",
+									"// Test 3: Response contains movie_id",
+									"pm.test(\"Response contains movie_id\", function () {",
+									"    pm.expect(jsonData).to.have.property('movie_id');",
+									"});",
+									"",
+									"// Test 4: Response contains message",
+									"pm.test(\"Response contains success message\", function () {",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Test Movie\",\n  \"original_title\": \"Updated Test Movie\",\n  \"release_date\": \"2024-01-15\",\n  \"runtime_minutes\": 125,\n  \"overview\": \"This movie has been updated via PUT request.\",\n  \"budget\": 12000000,\n  \"revenue\": 30000000,\n  \"mpa_rating\": \"R\",\n  \"genres\": [\"Action\", \"Drama\"],\n  \"directors\": [\"Updated Director\"],\n  \"studios\": [\n    {\n      \"studio_name\": \"Updated Studio\",\n      \"country\": \"United States\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/movies/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"movies",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Movies - DELETE",
+			"item": [
+				{
+					"name": "Delete Movie by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const jsonData = pm.response.json();",
+									"",
+									"pm.test(\"Response indicates success\", function () {",
+									"    pm.expect(jsonData).to.have.property('success');",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});",
+									"",
 									"pm.test(\"Response contains deleted movie information\", function () {",
 									"    pm.expect(jsonData).to.have.property('deleted_movie');",
 									"    pm.expect(jsonData.deleted_movie).to.be.an('object');",
@@ -1755,72 +1227,45 @@
 									"    pm.expect(jsonData.deleted_movie).to.have.property('title');",
 									"});",
 									"",
-									"// Test 4: Response contains warning",
 									"pm.test(\"Response contains warning about permanence\", function () {",
 									"    pm.expect(jsonData).to.have.property('warning');",
 									"    pm.expect(jsonData.warning).to.include('cannot be undone');",
 									"});",
 									"",
-									"// Test 5: Response contains success message",
 									"pm.test(\"Response contains deletion message\", function () {",
 									"    pm.expect(jsonData).to.have.property('message');",
 									"    pm.expect(jsonData.message).to.include('deleted');",
 									"});"
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
 					"request": {
 						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/movies/{{testMovieId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"movies",
-								"{{testMovieId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Movie - Not Found",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Test 1: Status code is 404",
-									"pm.test(\"Status code is 404 for non-existent movie\", function () {",
-									"    pm.response.to.have.status(404);",
-									"});",
-									"",
-									"// Test 2: Response contains error message",
-									"pm.test(\"Response contains not found message\", function () {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData).to.have.property('message');",
-									"    pm.expect(jsonData.message.toLowerCase()).to.include('not found');",
-									"});"
-								],
-								"type": "text/javascript"
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}",
+								"type": "text"
 							}
-						}
-					],
-					"request": {
-						"method": "DELETE",
-						"header": [],
+						],
 						"url": {
-							"raw": "{{baseUrl}}/movies/999999",
+							"raw": "{{baseUrl}}/movies/:id",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"movies",
-								"999999"
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
 							]
 						}
 					},
@@ -1830,50 +1275,72 @@
 		}
 	],
 	"auth": {
-		"type": "bearer",
-		"bearer": [
+		"type": "apikey",
+		"apikey": [
 			{
-				"key": "token",
-				"value": "{{accessToken}}",
+				"key": "key",
+				"value": "x-api-key",
+				"type": "string"
+			},
+			{
+				"key": "value",
+				"value": "{{apiKey}}",
 				"type": "string"
 			}
 		]
 	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
 	"variable": [
 		{
 			"key": "baseUrl",
-			"value": "http://localhost:3000/api",
-			"type": "string"
+			"value": "http://localhost:3000/api"
 		},
 		{
-			"key": "accessToken",
-			"value": "",
-			"type": "string"
+			"key": "apiKey",
+			"value": ""
 		},
 		{
 			"key": "testMovieId",
-			"value": "",
-			"type": "string"
+			"value": ""
 		},
 		{
 			"key": "testStudioId",
-			"value": "1",
-			"type": "string"
+			"value": "1"
 		},
 		{
 			"key": "testDirectorId",
-			"value": "1",
-			"type": "string"
+			"value": "1"
 		},
 		{
 			"key": "testActorId",
-			"value": "1",
-			"type": "string"
+			"value": "1"
 		},
 		{
 			"key": "testCollectionId",
-			"value": "1",
-			"type": "string"
+			"value": "1"
 		}
 	]
 }

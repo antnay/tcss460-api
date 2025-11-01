@@ -1,15 +1,24 @@
 openapi: 3.0.3
 info:
-  title: TCSS460 Movie Database API
+  title: Movie Database API
   description: |
     Comprehensive RESTful API for managing movies, actors, directors, studios, and collections.
     
     ## Features
     - Complete CRUD operations for movies
     - Advanced filtering and search capabilities
-    - JWT-based authentication
+    - API Key authentication
     - Pagination support
     - Bulk import functionality
+    - Rate limiting (1000 requests/hour per API key)
+    
+    ## Authentication
+    Most endpoints require a valid API key. Generate your API key at `/api/api-key` and include it in the `X-API-Key` header.
+    
+    **Example:**
+    ```
+    X-API-Key: your-api-key-here
+    ```
   version: 1.0.0
 
 servers:
@@ -21,8 +30,8 @@ servers:
 tags:
   - name: System
     description: System health and information endpoints
-  - name: Authentication
-    description: User registration and login
+  - name: API Key Management
+    description: Generate and manage API keys
   - name: Movies
     description: Movie CRUD operations and queries
   - name: Studios
@@ -35,7 +44,7 @@ tags:
     description: Collection/franchise-related movie queries
 
 security:
-  - BearerAuth: []
+  - ApiKeyAuth: []
 
 paths:
   /api/api-info:
@@ -55,10 +64,13 @@ paths:
                 properties:
                   name:
                     type: string
+                    example: "TCSS 460 API"
                   version:
                     type: string
+                    example: "1.0.0"
                   description:
                     type: string
+                    example: "RESTful API for movies"
 
   /api/health:
     get:
@@ -75,19 +87,40 @@ paths:
               schema:
                 type: object
                 properties:
-                  status:
+                  message:
                     type: string
-                    example: "healthy"
+                    example: "Database is working!"
                   timestamp:
                     type: string
                     format: date-time
 
-  /api/register:
+  /api/api-key:
+    get:
+      tags:
+        - API Key Management
+      summary: Get API key generation form
+      description: Returns an HTML form for generating API keys through a web browser
+      security: []
+      responses:
+        '200':
+          description: HTML form returned successfully
+          content:
+            text/html:
+              schema:
+                type: string
+                example: "<!DOCTYPE html>..."
+    
     post:
       tags:
-        - Authentication
-      summary: Register a new user
-      description: Creates a new user account and returns JWT tokens
+        - API Key Management
+      summary: Generate a new API key
+      description: |
+        Creates a new API key with the provided name and optional email.
+        The API key is returned only once and cannot be retrieved again.
+        
+        **Important:** Save the API key securely immediately after generation.
+        
+        **Rate Limit:** 1000 requests per hour per key
       security: []
       requestBody:
         required: true
@@ -96,76 +129,102 @@ paths:
             schema:
               type: object
               required:
-                - username
-                - email
-                - password
-                - role
+                - name
               properties:
-                username:
+                name:
                   type: string
-                  minLength: 3
-                  maxLength: 50
-                  example: "johndoe"
+                  minLength: 1
+                  maxLength: 255
+                  description: Name of the person, application, or organization
+                  example: "My Application"
                 email:
                   type: string
                   format: email
-                  example: "john@example.com"
-                password:
-                  type: string
-                  minLength: 8
-                  example: "securePassword123"
-                role:
-                  type: string
-                  enum: [user, admin]
-                  example: "user"
+                  maxLength: 255
+                  description: Optional contact email
+                  example: "developer@example.com"
       responses:
-        '200':
-          description: User registered successfully
+        '201':
+          description: API key generated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthResponse'
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  api_key:
+                    type: string
+                    description: The generated API key (shown only once)
+                    example: "abc123def456ghi789jkl012mno345pqr678stu"
+                  name:
+                    type: string
+                    example: "My Application"
+                  email:
+                    type: string
+                    example: "developer@example.com"
+                  rate_limit:
+                    type: integer
+                    example: 1000
+                  created_at:
+                    type: string
+                    format: date-time
+                  message:
+                    type: string
+                    example: "API key generated successfully"
+                  important_notice:
+                    type: string
+                    example: "SAVE THIS KEY SECURELY - It will not be shown again..."
         '400':
           $ref: '#/components/responses/BadRequest'
-        '409':
-          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
-  /api/login:
-    post:
+  /api/api-key/info:
+    get:
       tags:
-        - Authentication
-      summary: Login user
-      description: Authenticates user and returns JWT tokens
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - email
-                - password
-              properties:
-                email:
-                  type: string
-                  format: email
-                  example: "john@example.com"
-                password:
-                  type: string
-                  minLength: 8
-                  example: "securePassword123"
+        - API Key Management
+      summary: Get API key information
+      description: Returns information about the authenticated API key
+      security:
+        - ApiKeyAuth: []
       responses:
         '200':
-          description: Login successful
+          description: API key information retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  api_key_info:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      email:
+                        type: string
+                        nullable: true
+                      rate_limit:
+                        type: integer
+                      created_at:
+                        type: string
+                        format: date-time
+                      last_used_at:
+                        type: string
+                        format: date-time
+                        nullable: true
+                      expires_at:
+                        type: string
+                        format: date-time
+                        nullable: true
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   /api/movies:
     get:
@@ -292,8 +351,12 @@ paths:
                 $ref: '#/components/schemas/MovieListResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
 
     post:
       tags:
@@ -315,6 +378,10 @@ paths:
                 $ref: '#/components/schemas/MovieCreateResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -353,6 +420,10 @@ paths:
                 $ref: '#/components/schemas/BulkImportResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
 
   /api/movies/{id}:
     get:
@@ -371,8 +442,12 @@ paths:
                 $ref: '#/components/schemas/Movie'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
 
     put:
       tags:
@@ -396,8 +471,12 @@ paths:
                 $ref: '#/components/schemas/MovieUpdateResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
 
     patch:
       tags:
@@ -421,8 +500,12 @@ paths:
                 $ref: '#/components/schemas/MovieUpdateResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
 
     delete:
       tags:
@@ -449,8 +532,12 @@ paths:
                     type: string
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
 
   /api/movies/{id}/cast:
     patch:
@@ -492,8 +579,12 @@ paths:
                     type: integer
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
 
   /api/studios/{id}/movies:
     get:
@@ -519,8 +610,12 @@ paths:
                 $ref: '#/components/schemas/MovieListResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
 
   /api/studios/name/{name}/movies:
     get:
@@ -547,8 +642,12 @@ paths:
                 $ref: '#/components/schemas/MovieListResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
 
   /api/directors/{id}/movies:
     get:
@@ -574,8 +673,12 @@ paths:
                 $ref: '#/components/schemas/MovieListResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
 
   /api/directors/name/{name}/movies:
     get:
@@ -602,8 +705,12 @@ paths:
                 $ref: '#/components/schemas/MovieListResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
 
   /api/actors/{id}/movies:
     get:
@@ -629,8 +736,12 @@ paths:
                 $ref: '#/components/schemas/MovieListResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
 
   /api/actors/name/{name}/movies:
     get:
@@ -657,8 +768,12 @@ paths:
                 $ref: '#/components/schemas/MovieListResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
 
   /api/collections/{id}/movies:
     get:
@@ -684,8 +799,12 @@ paths:
                 $ref: '#/components/schemas/MovieListResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
 
   /api/collections/name/{name}/movies:
     get:
@@ -712,16 +831,23 @@ paths:
                 $ref: '#/components/schemas/MovieListResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
 
 components:
   securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      description: JWT Bearer token authentication
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        API key authentication. Generate your API key at `/api/api-key` and include it in the `X-API-Key` header.
+        
+        Rate limit: 1000 requests per hour per key.
 
   parameters:
     PageParam:
@@ -756,23 +882,6 @@ components:
       example: 1
 
   schemas:
-    AuthResponse:
-      type: object
-      properties:
-        username:
-          type: string
-        role:
-          type: string
-          enum: [user, admin]
-        jwt:
-          type: object
-          properties:
-            accessToken:
-              type: string
-            type:
-              type: string
-              example: "Bearer"
-
     Movie:
       type: object
       properties:
@@ -985,11 +1094,13 @@ components:
     Error:
       type: object
       properties:
-        success:
-          type: boolean
-          example: false
+        statusCode:
+          type: integer
         message:
           type: string
+        timestamp:
+          type: string
+          format: date-time
         errors:
           type: array
           items:
@@ -1002,13 +1113,21 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+          example:
+            statusCode: 400
+            message: "Validation error"
+            timestamp: "2024-11-01T10:00:00.000Z"
 
     Unauthorized:
-      description: Unauthorized - Invalid credentials
+      description: Unauthorized - Missing or invalid API key
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+          example:
+            statusCode: 401
+            message: "API key is required. Include X-API-Key header."
+            timestamp: "2024-11-01T10:00:00.000Z"
 
     NotFound:
       description: Resource not found
@@ -1016,13 +1135,27 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+          example:
+            statusCode: 404
+            message: "Movie not found"
+            timestamp: "2024-11-01T10:00:00.000Z"
 
-    Conflict:
-      description: Conflict - Resource already exists
+    RateLimitExceeded:
+      description: Rate limit exceeded
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 429
+              message:
+                type: string
+                example: "Rate limit exceeded. Please try again later."
+              timestamp:
+                type: string
+                format: date-time
 
     InternalError:
       description: Internal server error
@@ -1030,3 +1163,7 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+          example:
+            statusCode: 500
+            message: "Internal server error"
+            timestamp: "2024-11-01T10:00:00.000Z"

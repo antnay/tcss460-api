@@ -77,7 +77,7 @@ export interface CastMember {
 /**
  * Studio information
  */
-export interface Studio {
+export interface MovieStudio {
   studio_name: string;
   logo_url?: string;
   country?: string;
@@ -103,7 +103,7 @@ export interface MovieCreateInput {
   // Optional related entities
   directors?: string[]; // Array of director names
   producers?: string[]; // Array of producer names
-  studios?: Studio[]; // Array of studio objects
+  studios?: MovieStudio[]; // Array of studio objects
   cast?: CastMember[]; // Array of cast members (max 10)
   
   // Optional visual assets
@@ -133,7 +133,7 @@ export interface MovieUpdateInput {
   genres?: string[];
   directors?: string[];
   producers?: string[];
-  studios?: Studio[];
+  studios?: MovieStudio[];
   cast?: CastMember[];
   collection_name?: string;
 }

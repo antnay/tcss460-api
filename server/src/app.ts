@@ -5,7 +5,7 @@ import dotenvx from '@dotenvx/dotenvx';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import path from 'path'; import { initializeDatabase, closeDatabase } from '@db';
-import router from './routes';
+import publicRouter, { protectedRouter } from './routes';
 
 dotenvx.config({ path: '../.env' });
 
@@ -24,7 +24,8 @@ const startServer = async () => {
     });
 
     // Routes
-    app.use('/api', router);
+    app.use('/api', publicRouter);
+    app.use('/api', protectedRouter);
     // app.use(express.static(path.join(__dirname, '../public')));
 
     // API Documentation - Swagger UI

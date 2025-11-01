@@ -1,4 +1,4 @@
-import { MovieCreateInput, MovieCreateResponse, BulkImportResponse, Studio, CastMember } from '@models/movieModel';
+import { MovieCreateInput, MovieCreateResponse, BulkImportResponse, MovieStudio, CastMember } from '@models/movieModel';
 import pool from '@utils/database';
 import { Request, Response } from 'express';
 import { PoolClient } from 'pg';
@@ -54,7 +54,7 @@ const getOrCreateProducerId = async (client: PoolClient, producerName: string): 
 /**
  * Helper function to get or create a studio and return its ID
  */
-const getOrCreateStudioId = async (client: PoolClient, studio: Studio): Promise<number> => {
+const getOrCreateStudioId = async (client: PoolClient, studio: MovieStudio): Promise<number> => {
   const checkSql = 'SELECT studio_id FROM studios WHERE studio_name = $1';
   let result = await client.query(checkSql, [studio.studio_name.trim()]);
   
