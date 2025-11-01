@@ -1,12 +1,16 @@
 openapi: 3.0.3
 info:
-  title: TCSS 460 Movie API
+  title: TCSS460 Movie Database API
+  description: |
+    Comprehensive RESTful API for managing movies, actors, directors, studios, and collections.
+    
+    ## Features
+    - Complete CRUD operations for movies
+    - Advanced filtering and search capabilities
+    - JWT-based authentication
+    - Pagination support
+    - Bulk import functionality
   version: 1.0.0
-  description: RESTful API for movies with comprehensive movie information including directors and genres. https://github.com/antnay/tcss460-api
-  contact:
-    name: API Support
-  license:
-    name: MIT
 
 servers:
   - url: http://localhost:3000
@@ -18,9 +22,20 @@ tags:
   - name: System
     description: System health and information endpoints
   - name: Authentication
-    description: User authentication and registration
+    description: User registration and login
   - name: Movies
-    description: Movie data operations
+    description: Movie CRUD operations and queries
+  - name: Studios
+    description: Studio-related movie queries
+  - name: Directors
+    description: Director-related movie queries
+  - name: Actors
+    description: Actor-related movie queries
+  - name: Collections
+    description: Collection/franchise-related movie queries
+
+security:
+  - BearerAuth: []
 
 paths:
   /api/api-info:
@@ -28,8 +43,8 @@ paths:
       tags:
         - System
       summary: Get API information
-      description: Returns basic information about the API including name, version, and documentation link
-      operationId: getApiInfo
+      description: Returns basic information about the API
+      security: []
       responses:
         '200':
           description: API information retrieved successfully
@@ -40,468 +55,40 @@ paths:
                 properties:
                   name:
                     type: string
-                    example: TCSS 460 API
                   version:
                     type: string
-                    example: 1.0.0
                   description:
                     type: string
-                    example: RESTful API for movies
-                  documentation:
-                    type: string
-                    example: /api-docs
 
   /api/health:
     get:
       tags:
         - System
       summary: Health check
-      description: Checks if the database connection is working
-      operationId: healthCheck
+      description: Checks if the API is running and database is accessible
+      security: []
       responses:
         '200':
-          description: Database is healthy
+          description: Service is healthy
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message:
+                  status:
                     type: string
-                    example: Database is working!
-        '500':
-          description: Database connection failed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
+                    example: "healthy"
+                  timestamp:
                     type: string
-                    example: Database connection failed
-
-  /api/login:
-    post:
-      tags:
-        - Authentication
-      summary: User login
-      description: Authenticate a user with email and password, returns JWT tokens
-      operationId: login
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - email
-                - password
-              properties:
-                email:
-                  type: string
-                  format: email
-                  description: User's email address
-                  example: user@example.com
-                password:
-                  type: string
-                  format: password
-                  minLength: 8
-                  description: User's password (minimum 8 characters)
-                  example: password123
-      responses:
-        '200':
-          description: Login successful
-          headers:
-            Set-Cookie:
-              description: Refresh token stored in HTTP-only cookie
-              schema:
-                type: string
-                example: refresh-token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/JwtResponse'
-        '400':
-          description: Bad request - validation error or user does not exist
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                validationError:
-                  value:
-                    statusCode: 400
-                    message:
-                      - code: invalid_type
-                        message: email must be formatted as an email
-                    timestamp: "2025-10-25T12:00:00.000Z"
-                userNotFound:
-                  value:
-                    statusCode: 400
-                    message: user does not exist
-                    timestamp: "2025-10-25T12:00:00.000Z"
-        '401':
-          description: Unauthorized - incorrect credentials
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                statusCode: 401
-                message: incorrect login provided
-                timestamp: "2025-10-25T12:00:00.000Z"
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /api/movies/financial:
-    get:
-      tags:
-        - Movies
-      summary: Search movies by financial criteria (budget/revenue)
-      description: Retrieve movies that meet the specified financial thresholds.
-      operationId: getMoviesByFinancial
-      parameters:
-        - name: minBudget
-          in: query
-          description: Minimum budget (in dollars)
-          required: false
-          schema:
-            type: integer
-            format: int64
-          example: 100000000
-        - name: maxBudget
-          in: query
-          description: Maximum budget (in dollars)
-          required: false
-          schema:
-            type: integer
-            format: int64
-          example: 200000000
-        - name: minRevenue
-          in: query
-          description: Minimum revenue (in dollars)
-          required: false
-          schema:
-            type: integer
-            format: int64
-          example: 300000000
-        - name: maxRevenue
-          in: query
-          description: Maximum revenue (in dollars)
-          required: false
-          schema:
-            type: integer
-            format: int64
-          example: 1000000000
-      responses:
-        '200':
-          description: Movies matching financial criteria
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Movie'
-        '400':
-          description: Bad request - invalid or missing query parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: No movies found matching the criteria
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /api/movies/multi:
-    get:
-      tags:
-        - Movies
-      summary: Advanced multi-criteria search
-      description: |
-        Combine multiple filters (genre, actor, studio, MPA rating, budget range, release date range)
-        to return movies that match all specified criteria.
-      operationId: getMoviesByMultiFilter
-      parameters:
-        - name: genre
-          in: query
-          description: Genre name (partial, case-insensitive)
-          required: false
-          schema:
-            type: string
-          example: Action
-        - name: actor
-          in: query
-          description: Actor name (partial, case-insensitive)
-          required: false
-          schema:
-            type: string
-          example: "Julia Garner"
-        - name: studio
-          in: query
-          description: Studio name (partial, case-insensitive)
-          required: false
-          schema:
-            type: string
-          example: "Marvel Studios"
-        - name: mpaRating
-          in: query
-          description: Exact MPA rating (e.g., PG-13)
-          required: false
-          schema:
-            type: string
-          example: PG-13
-        - name: minBudget
-          in: query
-          description: Minimum budget (in dollars)
-          required: false
-          schema:
-            type: integer
-            format: int64
-          example: 100000000
-        - name: maxBudget
-          in: query
-          description: Maximum budget (in dollars)
-          required: false
-          schema:
-            type: integer
-            format: int64
-          example: 500000000
-        - name: startDate
-          in: query
-          description: Release date start (ISO 8601 date)
-          required: false
-          schema:
-            type: string
-            format: date
-          example: 2025-06-01
-        - name: endDate
-          in: query
-          description: Release date end (ISO 8601 date)
-          required: false
-          schema:
-            type: string
-            format: date
-          example: 2025-08-31
-      responses:
-        '200':
-          description: Movies matching all specified criteria
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Movie'
-        '400':
-          description: Bad request - invalid or missing filters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: No movies found matching the criteria
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /api/movies/studio:
-    get:
-      tags:
-        - Movies
-      summary: Search movies by studio
-      description: Retrieve movies produced by a specific studio (partial, case-insensitive)
-      operationId: getMoviesByStudio
-      parameters:
-        - name: name
-          in: query
-          description: Studio name to search for
-          required: true
-          schema:
-            type: string
-          example: "Warner Bros."
-      responses:
-        '200':
-          description: Movies produced by the specified studio
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Movie'
-        '400':
-          description: Bad request - missing or invalid studio name
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: No movies found for the specified studio
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /api/movies/director:
-    get:
-      tags:
-        - Movies
-      summary: Search movies by director
-      description: Retrieve movies directed by the specified filmmaker (partial, case-insensitive)
-      operationId: getMoviesByDirector
-      parameters:
-        - name: name
-          in: query
-          description: Director name to search for
-          required: true
-          schema:
-            type: string
-          example: "Christopher Nolan"
-      responses:
-        '200':
-          description: Movies directed by the specified director
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Movie'
-        '400':
-          description: Bad request - missing or invalid director name
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: No movies found for the specified director
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /api/movies/actor:
-    get:
-      tags:
-        - Movies
-      summary: Search movies by actor
-      description: Retrieve movies featuring the specified actor (partial, case-insensitive)
-      operationId: getMoviesByActor
-      parameters:
-        - name: name
-          in: query
-          description: Actor name to search for
-          required: true
-          schema:
-            type: string
-          example: "Tom Cruise"
-      responses:
-        '200':
-          description: Movies featuring the specified actor
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Movie'
-        '400':
-          description: Bad request - missing or invalid actor name
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: No movies found for the specified actor
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /api/movies/collection:
-    get:
-      tags:
-        - Movies
-      summary: Search movies by collection/franchise
-      description: Retrieve all movies that belong to a specified collection or franchise (partial, case-insensitive)
-      operationId: getMoviesByCollection
-      parameters:
-        - name: name
-          in: query
-          description: Collection name to search for
-          required: true
-          schema:
-            type: string
-          example: "Mission: Impossible"
-      responses:
-        '200':
-          description: Movies in the specified collection
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Movie'
-        '400':
-          description: Bad request - missing or invalid collection name
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: No movies found for the specified collection
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                    format: date-time
 
   /api/register:
     post:
       tags:
         - Authentication
-      summary: User registration
-      description: Register a new user account
-      operationId: register
+      summary: Register a new user
+      description: Creates a new user account and returns JWT tokens
+      security: []
       requestBody:
         required: true
         content:
@@ -518,187 +105,263 @@ paths:
                   type: string
                   minLength: 3
                   maxLength: 50
-                  description: Username (3-50 characters)
-                  example: johndoe
+                  example: "johndoe"
                 email:
                   type: string
                   format: email
-                  description: User's email address
-                  example: john.doe@example.com
+                  example: "john@example.com"
                 password:
                   type: string
-                  format: password
                   minLength: 8
-                  description: User's password (minimum 8 characters)
-                  example: securePassword123
+                  example: "securePassword123"
                 role:
                   type: string
-                  enum:
-                    - user
-                    - admin
-                  description: User role
-                  example: user
+                  enum: [user, admin]
+                  example: "user"
       responses:
         '200':
-          description: Registration successful
-          headers:
-            Set-Cookie:
-              description: Refresh token stored in HTTP-only cookie
-              schema:
-                type: string
-                example: refresh-token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly
+          description: User registered successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/JwtResponse'
+                $ref: '#/components/schemas/AuthResponse'
         '400':
-          description: Bad request - validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                statusCode: 400
-                message:
-                  - code: too_small
-                    message: username must be greater than 3 characters
-                timestamp: "2025-10-25T12:00:00.000Z"
+          $ref: '#/components/responses/BadRequest'
         '409':
-          description: Conflict - user already exists
+          $ref: '#/components/responses/Conflict'
+
+  /api/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      description: Authenticates user and returns JWT tokens
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  minLength: 8
+                  example: "securePassword123"
+      responses:
+        '200':
+          description: Login successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                statusCode: 400
-                message: User with this email or username already exists
-                timestamp: "2025-10-25T12:00:00.000Z"
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /api/movies:
     get:
       tags:
         - Movies
-      summary: Get all movies with pagination
+      summary: Get all movies with filtering
       description: |
-        Retrieve a paginated list of movies with optional year filtering.
-        Returns movies sorted alphabetically by title with aggregated directors and genres.
-        Executes parallel queries for movie data and total count for optimal performance.
-      operationId: getAllMovies
+        Retrieves movies with comprehensive filtering options. All filters can be combined.
+        
+        **Available Filters:**
+        - Title search (substring match)
+        - Year filter
+        - Genre filter
+        - MPA rating filter
+        - Actor filter
+        - Director filter
+        - Studio filter
+        - Collection filter
+        - Budget range (min/max)
+        - Revenue range (min/max)
+        - Date range (start/end)
       parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: title
+          in: query
+          description: Search by movie title (case-insensitive substring match)
+          schema:
+            type: string
+            minLength: 2
+          example: "batman"
         - name: year
           in: query
-          description: Filter movies by release year (exact match)
-          required: false
+          description: Filter by release year
           schema:
             type: integer
-            minimum: 1900
-            maximum: 2100
-          example: 2023
-        - name: page
+            minimum: 1800
+          example: 2020
+        - name: genre
           in: query
-          description: Page number (starts from 1)
-          required: false
+          description: Filter by genre name (exact match)
           schema:
-            type: integer
-            minimum: 1
-            default: 1
-          example: 1
-        - name: limit
+            type: string
+          example: "Action"
+        - name: rating
           in: query
-          description: Number of results per page (1-100)
-          required: false
+          description: Filter by MPA rating
+          schema:
+            type: string
+            enum: ["G", "PG", "PG-13", "R", "NC-17", "NR"]
+          example: "PG-13"
+        - name: actor
+          in: query
+          description: Filter by actor name (partial match)
+          schema:
+            type: string
+          example: "Tom Hanks"
+        - name: director
+          in: query
+          description: Filter by director name (partial match)
+          schema:
+            type: string
+          example: "Christopher Nolan"
+        - name: studio
+          in: query
+          description: Filter by studio name (partial match)
+          schema:
+            type: string
+          example: "Warner Bros"
+        - name: collection
+          in: query
+          description: Filter by collection name (partial match)
+          schema:
+            type: string
+          example: "Marvel"
+        - name: minBudget
+          in: query
+          description: Minimum budget filter
           schema:
             type: integer
-            minimum: 1
-            maximum: 100
-            default: 20
-          example: 20
+            minimum: 0
+          example: 1000000
+        - name: maxBudget
+          in: query
+          description: Maximum budget filter
+          schema:
+            type: integer
+            minimum: 0
+          example: 50000000
+        - name: minRevenue
+          in: query
+          description: Minimum revenue filter
+          schema:
+            type: integer
+            minimum: 0
+          example: 10000000
+        - name: maxRevenue
+          in: query
+          description: Maximum revenue filter
+          schema:
+            type: integer
+            minimum: 0
+          example: 100000000
+        - name: startDate
+          in: query
+          description: Release date range start (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+          example: "2020-01-01"
+        - name: endDate
+          in: query
+          description: Release date range end (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+          example: "2020-12-31"
       responses:
         '200':
-          description: Paginated list of movies retrieved successfully
+          description: Movies retrieved successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Movie'
-                  pagination:
-                    $ref: '#/components/schemas/PaginationMetadata'
-              examples:
-                paginatedResponse:
-                  value:
-                    data:
-                      - title: "Oppenheimer"
-                        original_title: "Oppenheimer"
-                        directors: "Christopher Nolan"
-                        genres: "Biography, Drama, History"
-                        release_date: "2023-07-21"
-                        runtime_minutes: 180
-                        overview: "The story of American scientist J. Robert Oppenheimer..."
-                        budget: 100000000
-                        revenue: 952000000
-                        mpa_rating: "R"
-                        poster_url: "https://image.tmdb.org/t/p/w500/..."
-                        backdrop_url: "https://image.tmdb.org/t/p/original/..."
-                    pagination:
-                      currentPage: 1
-                      pageSize: 20
-                      totalItems: 150
-                      totalPages: 8
-                      hasNextPage: true
-                      hasPreviousPage: false
+                $ref: '#/components/schemas/MovieListResponse'
         '400':
-          description: Bad request - invalid query parameters
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags:
+        - Movies
+      summary: Add a new movie
+      description: Creates a new movie with all related data (genres, directors, cast, etc.)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovieInput'
+      responses:
+        '201':
+          description: Movie created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalidYear:
-                  value:
-                    statusCode: 400
-                    message:
-                      - code: invalid_type
-                        message: Expected number, received string
-                    timestamp: "2025-10-25T12:00:00.000Z"
-                invalidLimit:
-                  value:
-                    statusCode: 400
-                    message:
-                      - code: too_big
-                        message: Number must be less than or equal to 100
-                    timestamp: "2025-10-25T12:00:00.000Z"
+                $ref: '#/components/schemas/MovieCreateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '500':
-          description: Internal server error
+          $ref: '#/components/responses/InternalError'
+
+  /api/movies/bulk:
+    post:
+      tags:
+        - Movies
+      summary: Bulk import movies
+      description: Import multiple movies in a single request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - movies
+              properties:
+                movies:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/MovieInput'
+                  minItems: 1
+      responses:
+        '201':
+          description: All movies imported successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/BulkImportResponse'
+        '207':
+          description: Partial success - some movies failed to import
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkImportResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
 
   /api/movies/{id}:
     get:
       tags:
         - Movies
       summary: Get movie by ID
-      description: Retrieve detailed information about a specific movie by its ID
-      operationId: getMovieById
+      description: Retrieves a single movie by its unique ID
       parameters:
-        - name: id
-          in: path
-          description: Movie ID
-          required: true
-          schema:
-            type: integer
-          example: 123
+        - $ref: '#/components/parameters/MovieIdParam'
       responses:
         '200':
           description: Movie retrieved successfully
@@ -707,53 +370,70 @@ paths:
               schema:
                 $ref: '#/components/schemas/Movie'
         '400':
-          description: Bad request - invalid ID parameter
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                statusCode: 400
-                message: id must be a number
-                timestamp: "2025-10-25T12:00:00.000Z"
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Movie not found
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Movies
+      summary: Update movie (complete)
+      description: Completely replaces a movie's data
+      parameters:
+        - $ref: '#/components/parameters/MovieIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovieInput'
+      responses:
+        '200':
+          description: Movie updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                statusCode: 404
-                message: movie not found
-                timestamp: "2025-10-25T12:00:00.000Z"
-        '500':
-          description: Internal server error
+                $ref: '#/components/schemas/MovieUpdateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - Movies
+      summary: Update movie (partial)
+      description: Updates only the provided fields
+      parameters:
+        - $ref: '#/components/parameters/MovieIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovieInput'
+      responses:
+        '200':
+          description: Movie updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    
+                $ref: '#/components/schemas/MovieUpdateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
     delete:
       tags:
         - Movies
-      summary: Delete movie by ID
-      description: |
-        Permanently delete a movie and all associated relationships (directors, genres, studios) 
-        via CASCADE deletion. The operation is wrapped in a database transaction for atomicity.
-        Includes comprehensive audit logging.
-      operationId: deleteMovieById
+      summary: Delete movie
+      description: Permanently deletes a movie and all related data
       parameters:
-        - name: id
-          in: path
-          description: Movie ID to delete (must be a positive integer)
-          required: true
-          schema:
-            type: integer
-            minimum: 1
-          example: 123
+        - $ref: '#/components/parameters/MovieIdParam'
       responses:
         '200':
-          description: Movie deleted successfully with audit information
+          description: Movie deleted successfully
           content:
             application/json:
               schema:
@@ -761,242 +441,592 @@ paths:
                 properties:
                   success:
                     type: boolean
-                    example: true
                   message:
                     type: string
-                    example: Movie "The Shawshank Redemption" has been permanently deleted
                   deleted_movie:
-                    type: object
-                    properties:
-                      movie_id:
-                        type: integer
-                        example: 123
-                      title:
-                        type: string
-                        example: The Shawshank Redemption
-                      original_title:
-                        type: string
-                        example: The Shawshank Redemption
-                      release_date:
-                        type: string
-                        format: date
-                        example: "1994-09-23"
-                      directors:
-                        type: string
-                        example: Frank Darabont
-                      genres:
-                        type: string
-                        example: Drama, Crime
-                      studios:
-                        type: string
-                        example: Castle Rock Entertainment
-                      deleted_at:
-                        type: string
-                        format: date-time
-                        example: "2025-10-26T10:30:00.000Z"
+                    $ref: '#/components/schemas/Movie'
                   warning:
                     type: string
-                    example: This action cannot be undone
         '400':
-          description: Bad request - invalid or missing ID parameter
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalidId:
-                  value:
-                    statusCode: 400
-                    message: id must be a valid positive number
-                    timestamp: "2025-10-25T12:00:00.000Z"
-                missingId:
-                  value:
-                    statusCode: 400
-                    message: id parameter is required
-                    timestamp: "2025-10-25T12:00:00.000Z"
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Movie not found
+          $ref: '#/components/responses/NotFound'
+
+  /api/movies/{id}/cast:
+    patch:
+      tags:
+        - Movies
+      summary: Update movie cast
+      description: Replaces the cast for a specific movie (max 10 actors)
+      parameters:
+        - $ref: '#/components/parameters/MovieIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cast
+              properties:
+                cast:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CastMember'
+                  maxItems: 10
+      responses:
+        '200':
+          description: Cast updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                statusCode: 404
-                message: Movie with id 123 not found
-                timestamp: "2025-10-25T12:00:00.000Z"
-        '500':
-          description: Internal server error - deletion failed (transaction rolled back)
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  movie_id:
+                    type: integer
+                  message:
+                    type: string
+                  cast_count:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studios/{id}/movies:
+    get:
+      tags:
+        - Studios
+      summary: Get movies by studio ID
+      description: Retrieves all movies produced by a specific studio
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Studio ID
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Movies retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                statusCode: 500
-                message: Failed to delete movie
-                timestamp: "2025-10-25T12:00:00.000Z"
-      security:
-        - BearerAuth: []
+                $ref: '#/components/schemas/MovieListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studios/name/{name}/movies:
+    get:
+      tags:
+        - Studios
+      summary: Get movies by studio name
+      description: Retrieves all movies by studio name (partial match)
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Studio name (URL encoded)
+          schema:
+            type: string
+          example: "Warner Bros"
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Movies retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/directors/{id}/movies:
+    get:
+      tags:
+        - Directors
+      summary: Get movies by director ID
+      description: Retrieves all movies directed by a specific director
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Director ID
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Movies retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/directors/name/{name}/movies:
+    get:
+      tags:
+        - Directors
+      summary: Get movies by director name
+      description: Retrieves all movies by director name (partial match)
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Director name (URL encoded)
+          schema:
+            type: string
+          example: "Christopher Nolan"
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Movies retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/actors/{id}/movies:
+    get:
+      tags:
+        - Actors
+      summary: Get movies by actor ID
+      description: Retrieves all movies featuring a specific actor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Actor ID
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Movies retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/actors/name/{name}/movies:
+    get:
+      tags:
+        - Actors
+      summary: Get movies by actor name
+      description: Retrieves all movies by actor name (partial match)
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Actor name (URL encoded)
+          schema:
+            type: string
+          example: "Tom Hanks"
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Movies retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/collections/{id}/movies:
+    get:
+      tags:
+        - Collections
+      summary: Get movies by collection ID
+      description: Retrieves all movies in a specific collection/franchise
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Collection ID
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Movies retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/collections/name/{name}/movies:
+    get:
+      tags:
+        - Collections
+      summary: Get movies by collection name
+      description: Retrieves all movies by collection name (partial match)
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Collection name (URL encoded)
+          schema:
+            type: string
+          example: "Marvel Cinematic Universe"
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Movies retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
 components:
-  schemas:
-    Movie:
-      type: object
-      properties:
-        title:
-          type: string
-          description: Movie title
-          example: The Shawshank Redemption
-        original_title:
-          type: string
-          description: Original movie title
-          example: The Shawshank Redemption
-        directors:
-          type: string
-          description: Comma-separated list of director names
-          example: Frank Darabont
-          nullable: true
-        genres:
-          type: string
-          description: Comma-separated list of genre names
-          example: Drama, Crime
-          nullable: true
-        release_date:
-          type: string
-          format: date
-          description: Movie release date
-          example: "1994-09-23"
-        runtime_minutes:
-          type: integer
-          description: Movie runtime in minutes
-          example: 142
-          nullable: true
-        overview:
-          type: string
-          description: Movie plot summary
-          example: Two imprisoned men bond over a number of years...
-          nullable: true
-        budget:
-          type: integer
-          format: int64
-          description: Movie budget in dollars
-          example: 25000000
-          nullable: true
-        revenue:
-          type: integer
-          format: int64
-          description: Movie revenue in dollars
-          example: 28341469
-          nullable: true
-        mpa_rating:
-          type: string
-          description: MPAA rating (G, PG, PG-13, R, NC-17)
-          example: R
-          nullable: true
-        poster_url:
-          type: string
-          format: uri
-          description: URL to movie poster image
-          example: https://image.tmdb.org/t/p/w500/poster.jpg
-          nullable: true
-        backdrop_url:
-          type: string
-          format: uri
-          description: URL to movie backdrop image
-          example: https://image.tmdb.org/t/p/w500/backdrop.jpg
-          nullable: true
-
-    PaginationMetadata:
-      type: object
-      description: Pagination metadata for navigating through results
-      properties:
-        currentPage:
-          type: integer
-          description: Current page number
-          example: 1
-          minimum: 1
-        pageSize:
-          type: integer
-          description: Number of items per page
-          example: 20
-          minimum: 1
-          maximum: 100
-        totalItems:
-          type: integer
-          description: Total number of items across all pages
-          example: 150
-          minimum: 0
-        totalPages:
-          type: integer
-          description: Total number of pages
-          example: 8
-          minimum: 0
-        hasNextPage:
-          type: boolean
-          description: Whether there is a next page available
-          example: true
-        hasPreviousPage:
-          type: boolean
-          description: Whether there is a previous page available
-          example: false
-
-    JwtResponse:
-      type: object
-      properties:
-        username:
-          type: string
-          description: Username of authenticated user
-          example: johndoe
-        role:
-          type: string
-          enum:
-            - user
-            - admin
-          description: User role
-          example: user
-        jwt:
-          type: object
-          properties:
-            accessToken:
-              type: string
-              description: JWT access token
-              example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6ImpvaG5kb2UiLCJyb2xlIjoidXNlciIsImlhdCI6MTYzMjE1MjAwMH0.xyz
-            type:
-              type: string
-              description: Token type
-              example: Bearer
-
-    ErrorResponse:
-      type: object
-      properties:
-        statusCode:
-          type: integer
-          description: HTTP status code
-          example: 400
-        message:
-          oneOf:
-            - type: string
-            - type: object
-            - type: array
-          description: Error message or validation errors
-          example: Bad request
-        timestamp:
-          type: string
-          format: date-time
-          description: ISO 8601 timestamp of when the error occurred
-          example: "2025-10-25T12:00:00.000Z"
-
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: JWT access token for authenticated requests
-    
-    CookieAuth:
-      type: apiKey
-      in: cookie
-      name: refresh-token
-      description: Refresh token stored in HTTP-only cookie
+      description: JWT Bearer token authentication
 
-security:
-  - BearerAuth: []
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Page number for pagination
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      example: 1
+
+    LimitParam:
+      name: limit
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      example: 20
+
+    MovieIdParam:
+      name: id
+      in: path
+      required: true
+      description: Movie ID
+      schema:
+        type: integer
+        minimum: 1
+      example: 1
+
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        username:
+          type: string
+        role:
+          type: string
+          enum: [user, admin]
+        jwt:
+          type: object
+          properties:
+            accessToken:
+              type: string
+            type:
+              type: string
+              example: "Bearer"
+
+    Movie:
+      type: object
+      properties:
+        movie_id:
+          type: integer
+        title:
+          type: string
+        original_title:
+          type: string
+        directors:
+          type: string
+          description: Comma-separated list of directors
+        genres:
+          type: string
+          description: Comma-separated list of genres
+        release_date:
+          type: string
+          format: date
+        runtime_minutes:
+          type: integer
+        overview:
+          type: string
+        budget:
+          type: integer
+          format: int64
+        revenue:
+          type: integer
+          format: int64
+        mpa_rating:
+          type: string
+        poster_url:
+          type: string
+          format: uri
+        backdrop_url:
+          type: string
+          format: uri
+
+    MovieInput:
+      type: object
+      required:
+        - title
+        - original_title
+        - release_date
+        - runtime_minutes
+        - overview
+        - mpa_rating
+        - genres
+      properties:
+        title:
+          type: string
+          minLength: 1
+        original_title:
+          type: string
+          minLength: 1
+        release_date:
+          type: string
+          format: date
+        runtime_minutes:
+          type: integer
+          minimum: 1
+        overview:
+          type: string
+        budget:
+          type: integer
+          minimum: 0
+        revenue:
+          type: integer
+          minimum: 0
+        mpa_rating:
+          type: string
+        collection_name:
+          type: string
+          nullable: true
+        poster_url:
+          type: string
+          format: uri
+          nullable: true
+        backdrop_url:
+          type: string
+          format: uri
+          nullable: true
+        genres:
+          type: array
+          items:
+            type: string
+          minItems: 1
+        directors:
+          type: array
+          items:
+            type: string
+        producers:
+          type: array
+          items:
+            type: string
+        studios:
+          type: array
+          items:
+            $ref: '#/components/schemas/Studio'
+        cast:
+          type: array
+          items:
+            $ref: '#/components/schemas/CastMember'
+          maxItems: 10
+
+    Studio:
+      type: object
+      required:
+        - studio_name
+      properties:
+        studio_name:
+          type: string
+        logo_url:
+          type: string
+          format: uri
+          nullable: true
+        country:
+          type: string
+          nullable: true
+
+    CastMember:
+      type: object
+      required:
+        - actor_name
+        - actor_order
+      properties:
+        actor_name:
+          type: string
+        character_name:
+          type: string
+          nullable: true
+        actor_order:
+          type: integer
+          minimum: 1
+        profile_url:
+          type: string
+          format: uri
+          nullable: true
+
+    MovieListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Movie'
+        meta:
+          type: object
+          properties:
+            page:
+              type: integer
+            limit:
+              type: integer
+            total:
+              type: integer
+            pages:
+              type: integer
+            hasNextPage:
+              type: boolean
+            hasPreviousPage:
+              type: boolean
+            query:
+              type: object
+              additionalProperties: true
+
+    MovieCreateResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        movie_id:
+          type: integer
+        message:
+          type: string
+
+    MovieUpdateResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        movie_id:
+          type: integer
+        message:
+          type: string
+
+    BulkImportResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        total_processed:
+          type: integer
+        successful:
+          type: integer
+        failed:
+          type: integer
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+              success:
+                type: boolean
+              movie_id:
+                type: integer
+              error:
+                type: string
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid input
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Unauthorized - Invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Conflict:
+      description: Conflict - Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

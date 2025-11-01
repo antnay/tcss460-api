@@ -12,18 +12,17 @@ router.post('/register', c.register)
 router.get('/api-key', c.keyForm)
 router.post('/api-key', c.generateKey)
 
+// GET
 router.get('/movies', c.getAllMovies);
 router.get('/movies/:id', c.getMovieById);
-router.get('/movies/search', c.searchMoviesByTitle);
-router.get('/movies/financial', c.getMoviesByFinancial);
-router.get('/movies/multi', c.getMoviesByMultiFilter);
-router.get('/movies/studio', c.getMoviesByStudio);
-router.get('/movies/director', c.getMoviesByDirector);
-router.get('/movies/actor', c.getMoviesByActor);
-router.get('/movies/collection', c.getMoviesByCollection);
-router.get('/movies/filter/release', c.filterByRelease);
-router.get('/movies/filter/genre', c.filterByGenre);
-router.get('/movies/filter/rating', c.filterByRating);
+router.get('/studios/:id/movies', c.getMoviesByStudioId);
+router.get('/studios/name/:name/movies', c.getMoviesByStudio);
+router.get('/directors/:id/movies', c.getMoviesByDirectorId);
+router.get('/directors/name/:name/movies', c.getMoviesByDirector);
+router.get('/actors/:id/movies', c.getMoviesByActorId);
+router.get('/actors/name/:name/movies', c.getMoviesByActor);
+router.get('/collections/:id/movies', c.getMoviesByCollectionId);
+router.get('/collections/name/:name/movies', c.getMoviesByCollection);
 
 // POST routes - Add movies
 router.post('/movies', c.addMovie);
@@ -35,5 +34,8 @@ router.put('/movies/:id', c.updateMovie);
 // PATCH routes - Partial updates
 router.patch('/movies/:id', c.patchMovie);
 router.patch('/movies/:id/cast', c.updateCast);
+
+// DELETE routes - Delete movie
+router.delete('/movies/:id', c.deleteMovieById);
 
 export default router;
