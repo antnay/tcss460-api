@@ -7,19 +7,23 @@ export const router = Router();
 router.get('/api-info', c.info);
 router.get('/health', c.healthCheck);
 
-// GET routes - Retrieve movies
-router.get('/movies', c.getAllMovies);
 router.post('/login', c.login)
 router.post('/register', c.register)
 router.get('/api-key', c.keyForm)
 router.post('/api-key', c.generateKey)
+
+router.get('/movies', c.getAllMovies);
+router.get('/movies/:id', c.getMovieById);
+router.get('/movies/search', c.searchMoviesByTitle);
 router.get('/movies/financial', c.getMoviesByFinancial);
 router.get('/movies/multi', c.getMoviesByMultiFilter);
 router.get('/movies/studio', c.getMoviesByStudio);
 router.get('/movies/director', c.getMoviesByDirector);
 router.get('/movies/actor', c.getMoviesByActor);
 router.get('/movies/collection', c.getMoviesByCollection);
-router.get('/movies/:id', c.getMovieById);
+router.get('/movies/filter/release', c.filterByRelease);
+router.get('/movies/filter/genre', c.filterByGenre);
+router.get('/movies/filter/rating', c.filterByRating);
 
 // POST routes - Add movies
 router.post('/movies', c.addMovie);
