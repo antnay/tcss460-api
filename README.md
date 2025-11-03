@@ -53,3 +53,21 @@
 
 ## Comments
 
+# Production Sprint 
+- 11/2 4:00PM - 5:00PM
+
+## API URL
+- [api docs](https://tcss460-api.onrender.com/api-docs)
+
+## Contribution and Members
+- Anthony Naydyuk: 
+- Regan Lai: 
+- Boyd Bouck:
+- Hussein Sheikh:
+
+## Meeting Location and What Was Done 
+- Discord
+
+## Comments
+
+
