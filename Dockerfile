@@ -2,12 +2,12 @@ FROM node:23-alpine
 
 WORKDIR /server-app
 
-COPY server/package.json server/package-lock.json ./
+COPY ./package.json ./package-lock.json ./
 RUN npm ci
 
 RUN npm install -g nodemon
 
-COPY server/ .
+COPY . .
 
 RUN npm run build
 
