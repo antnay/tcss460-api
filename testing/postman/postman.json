@@ -781,6 +781,109 @@
 					"response": []
 				},
 				{
+					"name": "Filter by Year",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 1: Status code is 200 or 404",
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect([200, 404]).to.include(pm.response.code);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    ",
+									"    // Test 2: Meta contains year filter",
+									"    pm.test(\"Meta contains year filter\", function () {",
+									"        pm.expect(jsonData.meta.query).to.have.property('year');",
+									"        pm.expect(jsonData.meta.query.year).to.equal(2020);",
+									"    });",
+									"    ",
+									"    // Test 3: All movies are from specified year",
+									"    if (jsonData.data.length > 0) {",
+									"        pm.test(\"All movies are from year 2020\", function () {",
+									"            jsonData.data.forEach(movie => {",
+									"                const movieYear = new Date(movie.release_date).getFullYear();",
+									"                pm.expect(movieYear).to.equal(2020);",
+									"            });",
+									"        });",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/movies?year=2020",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"movies"
+							],
+							"query": [
+								{
+									"key": "year",
+									"value": "2020"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Genre",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 1: Status code is 200 or 404",
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect([200, 404]).to.include(pm.response.code);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    ",
+									"    // Test 2: Meta contains genre filter",
+									"    pm.test(\"Meta contains genre filter\", function () {",
+									"        pm.expect(jsonData.meta.query).to.have.property('genre');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/movies?genre=Action",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"movies"
+							],
+							"query": [
+								{
+									"key": "genre",
+									"value": "Action"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Filter by Rating",
 					"event": [
 						{
@@ -832,6 +935,133 @@
 								{
 									"key": "rating",
 									"value": "PG-13"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Date Range",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 1: Status code is 200 or 404",
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect([200, 404]).to.include(pm.response.code);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    ",
+									"    // Test 2: Meta contains date filters",
+									"    pm.test(\"Meta contains date range filters\", function () {",
+									"        pm.expect(jsonData.meta.query).to.have.property('startDate');",
+									"        pm.expect(jsonData.meta.query).to.have.property('endDate');",
+									"    });",
+									"    ",
+									"    // Test 3: All movies fall within date range",
+									"    if (jsonData.data.length > 0) {",
+									"        pm.test(\"All movies are within date range\", function () {",
+									"            const startDate = new Date('2020-01-01');",
+									"            const endDate = new Date('2020-12-31');",
+									"            ",
+									"            jsonData.data.forEach(movie => {",
+									"                const movieDate = new Date(movie.release_date);",
+									"                pm.expect(movieDate).to.be.at.least(startDate);",
+									"                pm.expect(movieDate).to.be.at.most(endDate);",
+									"            });",
+									"        });",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/movies?startDate=2020-01-01&endDate=2020-12-31",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"movies"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2020-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2020-12-31"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Financial",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 1: Status code is 200 or 404",
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect([200, 404]).to.include(pm.response.code);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    ",
+									"    // Test 2: Meta contains financial filters",
+									"    pm.test(\"Meta contains financial filters\", function () {",
+									"        pm.expect(jsonData.meta.query).to.have.property('minBudget');",
+									"    });",
+									"    ",
+									"    // Test 3: All movies meet budget criteria",
+									"    if (jsonData.data.length > 0) {",
+									"        pm.test(\"All movies meet minimum budget\", function () {",
+									"            const minBudget = 1000000;",
+									"            jsonData.data.forEach(movie => {",
+									"                if (movie.budget) {",
+									"                    pm.expect(parseInt(movie.budget)).to.be.at.least(minBudget);",
+									"                }",
+									"            });",
+									"        });",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/movies?minBudget=1000000&maxBudget=50000000",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"movies"
+							],
+							"query": [
+								{
+									"key": "minBudget",
+									"value": "1000000"
+								},
+								{
+									"key": "maxBudget",
+									"value": "50000000"
 								}
 							]
 						}
@@ -1264,6 +1494,450 @@
 							"variable": [
 								{
 									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Studios",
+			"item": [
+				{
+					"name": "Get Movies by Studio ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 1: Status code is 200 or 404",
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect([200, 404]).to.include(pm.response.code);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    ",
+									"    // Test 2: Has pagination structure",
+									"    pm.test(\"Response has correct structure\", function () {",
+									"        pm.expect(jsonData).to.have.property('data');",
+									"        pm.expect(jsonData).to.have.property('meta');",
+									"    });",
+									"    ",
+									"    // Test 3: Meta contains studio filter",
+									"    pm.test(\"Meta contains studioId\", function () {",
+									"        pm.expect(jsonData.meta).to.have.property('query');",
+									"        pm.expect(jsonData.meta.query).to.have.property('studioId');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/studios/:id/movies?page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"studios",
+								":id",
+								"movies"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Movies by Studio Name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 1: Status code is 200 or 404",
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect([200, 404]).to.include(pm.response.code);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    ",
+									"    // Test 2: Has correct structure",
+									"    pm.test(\"Response has data and meta\", function () {",
+									"        pm.expect(jsonData).to.have.property('data');",
+									"        pm.expect(jsonData).to.have.property('meta');",
+									"    });",
+									"    ",
+									"    // Test 3: Meta contains studio name",
+									"    pm.test(\"Meta contains studio name\", function () {",
+									"        pm.expect(jsonData.meta.query).to.have.property('studio');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/studios/name/:name/movies",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"studios",
+								"name",
+								":name",
+								"movies"
+							],
+							"variable": [
+								{
+									"key": "name",
+									"value": "warner"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Directors",
+			"item": [
+				{
+					"name": "Get Movies by Director ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 1: Status code is 200 or 404",
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect([200, 404]).to.include(pm.response.code);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    ",
+									"    pm.test(\"Response has correct structure\", function () {",
+									"        pm.expect(jsonData).to.have.property('data');",
+									"        pm.expect(jsonData).to.have.property('meta');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/directors/:id/movies",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"directors",
+								":id",
+								"movies"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Movies by Director Name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 1: Status code is 200 or 404",
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect([200, 404]).to.include(pm.response.code);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    ",
+									"    pm.test(\"Meta contains director name\", function () {",
+									"        pm.expect(jsonData.meta.query).to.have.property('director');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/directors/name/:name/movies",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"directors",
+								"name",
+								":name",
+								"movies"
+							],
+							"variable": [
+								{
+									"key": "name",
+									"value": "michael"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Actors",
+			"item": [
+				{
+					"name": "Get Movies by Actor ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 1: Status code is 200 or 404",
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect([200, 404]).to.include(pm.response.code);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    ",
+									"    pm.test(\"Response has correct structure\", function () {",
+									"        pm.expect(jsonData).to.have.property('data');",
+									"        pm.expect(jsonData).to.have.property('meta');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/actors/:id/movies",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"actors",
+								":id",
+								"movies"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "59"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Movies by Actor Name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 1: Status code is 200 or 404",
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect([200, 404]).to.include(pm.response.code);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    ",
+									"    pm.test(\"Meta contains actor name\", function () {",
+									"        pm.expect(jsonData.meta.query).to.have.property('actor');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/actors/name/:name/movies",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"actors",
+								"name",
+								":name",
+								"movies"
+							],
+							"variable": [
+								{
+									"key": "name",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Collections",
+			"item": [
+				{
+					"name": "Get Movies by Collection ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 1: Status code is 200 or 404",
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect([200, 404]).to.include(pm.response.code);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    ",
+									"    pm.test(\"Response has correct structure\", function () {",
+									"        pm.expect(jsonData).to.have.property('data');",
+									"        pm.expect(jsonData).to.have.property('meta');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/collections/:id/movies",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"collections",
+								":id",
+								"movies"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Movies by Collection Name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 1: Status code is 200 or 404",
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect([200, 404]).to.include(pm.response.code);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    ",
+									"    pm.test(\"Meta contains collection name\", function () {",
+									"        pm.expect(jsonData.meta.query).to.have.property('collection');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/collections/name/:name/movies",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"collections",
+								"name",
+								":name",
+								"movies"
+							],
+							"variable": [
+								{
+									"key": "name",
 									"value": ""
 								}
 							]

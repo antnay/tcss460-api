@@ -1,9 +1,11 @@
 openapi: 3.0.3
 info:
-  title: Movie Database API
+  title: TCSS460 Movie Database API
   description: |
     Comprehensive RESTful API for managing movies, actors, directors, studios, and collections.
     
+    [github](https://github.com/antnay/tcss460-api)
+
     ## Features
     - Complete CRUD operations for movies
     - Advanced filtering and search capabilities
