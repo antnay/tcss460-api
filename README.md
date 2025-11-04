@@ -78,6 +78,7 @@ DB_URL=postgresql://...
 
 ## API URL
 - [api docs](https://tcss460-api.onrender.com/api-docs)
+- [auth api docs](https://tcss460-api.onrender.com/api-docs/)
 
 ## Contribution and Members
 - Anthony Naydyuk: 
