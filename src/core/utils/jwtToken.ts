@@ -2,7 +2,7 @@ import dotenvx from '@dotenvx/dotenvx';
 import { JwtClaims } from '@models/authModel';
 import jwt from 'jsonwebtoken';
 
-dotenvx.config({ path: '../.env' });
+dotenvx.config();
 
 const refreshSecret: string = process.env.REFRESH_SECRET ?? "NO";
 const accessSecret: string = process.env.REFRESH_SECRET ?? "NO";

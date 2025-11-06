@@ -7,7 +7,7 @@ import YAML from 'yamljs';
 import path from 'path'; import { initializeDatabase, closeDatabase } from '@db';
 import publicRouter, { protectedRouter } from './routes';
 
-dotenvx.config({ path: '../.env' });
+dotenvx.config();
 
 // Initialize the database pool
 const startServer = async () => {

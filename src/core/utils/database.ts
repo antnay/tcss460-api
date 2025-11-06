@@ -1,7 +1,7 @@
 import { Pool } from 'pg';
 import dotenvx from '@dotenvx/dotenvx';
 
-dotenvx.config();
+// dotenvx.config();
 
 const pool: Pool = new Pool({
   // user: process.env.DB_USER,
