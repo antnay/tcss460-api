@@ -11,12 +11,4 @@ COPY . .
 
 RUN npm run build
 
-CMD if [ "$NODE_ENV" = "production" ]; then \
-        echo "Starting production server"; \
-        exec npm run start; \
-    else \
-        echo "Starting development server with hot reload"; \
-        exec npm run dev; \
-    fi
-
-
+CMD npm run start
