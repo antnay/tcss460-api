@@ -53,7 +53,7 @@ export const requireApiKey = async (
     try {
         // Extract API key from header
         const providedKey = req.headers['x-api-key'] as string;
-        console.log(req.headers);
+        // console.log(req.headers);
         
 
         if (!providedKey) {
