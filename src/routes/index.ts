@@ -14,7 +14,7 @@ publicRouter.get('/health', c.healthCheck);
 // router.post('/login', c.login)
 // router.post('/register', c.register)
 publicRouter.get('/api-key', c.serveApiKeyForm);
-publicRouter.get('/api-key/info', c.getApiKeyInfo);
+protectedRouter.get('/api-key/info', c.getApiKeyInfo);
 
 publicRouter.post('/api-key', validateGenerateApiKey, c.generateApiKeyController);
 
